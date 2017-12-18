@@ -84,11 +84,6 @@ namespace Bachelorarbeit
         private GpioPin grip_cal_pin;
 
 
-        private const int LED_PIN = 5;
-        private const int BUTTON_PIN = 27;
-        private GpioPin ledPin;
-        private GpioPin buttonPin;
-        private GpioPinValue ledPinValue = GpioPinValue.High;
         private SolidColorBrush redBrush = new SolidColorBrush(Windows.UI.Colors.Red);
         private SolidColorBrush grayBrush = new SolidColorBrush(Windows.UI.Colors.LightGray);
         private DispatcherTimer timer;
@@ -103,11 +98,13 @@ namespace Bachelorarbeit
         private int turn_act = TURN_MAX;
         private int grip_act = GRIP_MAX;
 
-        private int hor_soll = 700;
-        private int vert_soll = 1000;
-        private int turn_soll = 500;
-        private int grip_soll = 15;
+        private const int hor_soll = 700;
+        private const int vert_soll = 1000;
+        private const int turn_soll = 500;
+        private const int grip_soll = 15;
         private int tube = 10;
+        private Punkt setpoint = new Punkt(hor_soll, turn_soll, vert_soll);
+        private Punkt actual = new Punkt();
 
         private bool inCalibration = false;
         private bool calibrationFinished = false;
@@ -553,29 +550,35 @@ namespace Bachelorarbeit
                 
             if (SetPoint.IsPressed == true)
             {
-                int x = 0;
-                int.TryParse(HorIn.Text, out x);
+                int p = 0;
+                int.TryParse(HorIn.Text, out p);
 
-                int h = 0;
-                int.TryParse(VertIn.Text, out h);
+                int z = 0;
+                int.TryParse(VertIn.Text, out z);
 
-                int w = 0;
-                int.TryParse(TurnIn.Text, out w);
+                int phi = 0;
+                int.TryParse(TurnIn.Text, out phi);
 
-                hor_soll = x;
-                vert_soll = h;
-                turn_soll = w;
+                setpoint.setP(p);
+                setpoint.setZ(z);
+               setpoint.setPhi(phi);
             }
             
         }
 
         private void CheckPositionVert()
         {
-            if (vert_act <= vert_soll - tube || vert_act <= 0)
+            //if (vert_act <= vert_soll - tube || vert_act <= 0)
+            //    GoDown();
+            //else if (vert_act >= vert_soll + tube || vert_act >= VERT_MAX)
+            //    GoUp();
+            //else if (vert_act < vert_soll + tube && vert_act > vert_soll - tube)
+            //    StopVert();
+            if (actual.getZ() <= setpoint.getZ() - tube || actual.getZ() <= 0)
                 GoDown();
-            else if (vert_act >= vert_soll + tube || vert_act >= VERT_MAX)
+            else if (actual.getZ() >= setpoint.getZ() + tube || actual.getZ() >= VERT_MAX)
                 GoUp();
-            else if (vert_act < vert_soll + tube && vert_act > vert_soll - tube)
+            else if (actual.getZ() < setpoint.getZ() + tube && actual.getZ() > setpoint.getZ() - tube)
                 StopVert();
         }
 
@@ -703,21 +706,24 @@ namespace Bachelorarbeit
         private void Calibrate_Hor()
         {
             inCalibration = true;
-            hor_act = HOR_MAX;
+            //hor_act = HOR_MAX;
+            actual.setP(HOR_MAX);
             GoBack();
         }
 
         private void Calibrate_Vert()
         {
             inCalibration = true;
-            vert_act = VERT_MAX;
+            //vert_act = VERT_MAX;
+            actual.setZ(VERT_MAX);
             GoUp();
         }
 
         private void Calibrate_Turn()
         {
             inCalibration = true;
-            turn_act = TURN_MAX;
+            //turn_act = TURN_MAX;
+            actual.setPhi(TURN_MAX);
             TurnRight();
         }
 
