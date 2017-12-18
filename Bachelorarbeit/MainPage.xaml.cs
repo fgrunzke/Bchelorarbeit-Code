@@ -82,27 +82,29 @@ namespace Bachelorarbeit
         private GpioPin vert_cal_pin;
         private GpioPin turn_cal_pin;
         private GpioPin grip_cal_pin;
+        private const double input_timeout = 0.1;
 
 
         private SolidColorBrush redBrush = new SolidColorBrush(Windows.UI.Colors.Red);
         private SolidColorBrush grayBrush = new SolidColorBrush(Windows.UI.Colors.LightGray);
         private DispatcherTimer timer;
+        private DispatcherTimer timerGUI;
 
-        private const int HOR_MAX = 1050;
-        private const int VERT_MAX = 2000;
-        private const int TURN_MAX = 2000;
-        private const int GRIP_MAX = 45;
+        private const int HOR_MAX = 700;
+        private const int VERT_MAX = 1600;
+        private const int TURN_MAX = 1800;
+        private const int GRIP_MAX = 20;
 
         private int hor_act = HOR_MAX;
         private int vert_act = VERT_MAX;
         private int turn_act = TURN_MAX;
         private int grip_act = GRIP_MAX;
 
-        private const int hor_soll = 700;
+        private const int hor_soll = 250;
         private const int vert_soll = 1000;
         private const int turn_soll = 500;
         private const int grip_soll = 15;
-        private int tube = 10;
+        private int tube = 20;
         private Punkt setpoint = new Punkt(hor_soll, turn_soll, vert_soll);
         private Punkt actual = new Punkt();
 
@@ -114,8 +116,6 @@ namespace Bachelorarbeit
         private bool turn_null = true;
         private bool hor_null = true;
         private bool grip_null = true;
-        private bool hor_fwd = false;
-        private bool grip_open = false;
         private bool emergencyStop = false;
 
         public MainPage()
@@ -129,6 +129,10 @@ namespace Bachelorarbeit
             {
                 timer.Start();
             }
+            timerGUI = new DispatcherTimer();
+            timerGUI.Interval = TimeSpan.FromMilliseconds(500);
+            timerGUI.Tick += TimerGUI_Tick;
+            timerGUI.Start();
 
             Calibrate();
         }
@@ -196,26 +200,26 @@ namespace Bachelorarbeit
             //Eingangs GPIOs konfigurieren, entprellen und Evnetlistener Registrieren
 
             SetGpioIn(vert_cal_pin);
-            SetGpioIn(vert_ink1_pin, 0.2);
-            SetGpioIn(vert_ink2_pin, 0.2);
+            SetGpioIn(vert_ink1_pin, input_timeout);
+            SetGpioIn(vert_ink2_pin, input_timeout);
             vert_cal_pin.ValueChanged += vert_cal_pin_ValueChanged;
             vert_ink1_pin.ValueChanged += vert_ink1_pin_ValueChanged;
             vert_ink2_pin.ValueChanged += vert_ink2_pin_ValueChanged;
 
             SetGpioIn(turn_cal_pin);
-            SetGpioIn(turn_ink1_pin, 0.2);
-            SetGpioIn(turn_ink2_pin, 0.2);
+            SetGpioIn(turn_ink1_pin, input_timeout);
+            SetGpioIn(turn_ink2_pin, input_timeout);
             turn_cal_pin.ValueChanged += turn_cal_pin_ValueChanged;
             turn_ink1_pin.ValueChanged += turn_ink1_pin_ValueChanged;
             turn_ink2_pin.ValueChanged += turn_ink2_pin_ValueChanged;
 
             SetGpioIn(hor_cal_pin);
-            SetGpioIn(hor_step_pin, 0.2);
+            SetGpioIn(hor_step_pin, input_timeout);
             hor_cal_pin.ValueChanged += hor_cal_pin_ValueChanged;
             hor_step_pin.ValueChanged += hor_step_pin_ValueChanged;
 
             SetGpioIn(grip_cal_pin);
-            SetGpioIn(grip_step_pin, 0.2);
+            SetGpioIn(grip_step_pin, input_timeout);
             grip_cal_pin.ValueChanged += grip_cal_pin_ValueChanged;
             grip_step_pin.ValueChanged += grip_step_pin_ValueChanged;
 
@@ -389,9 +393,8 @@ namespace Bachelorarbeit
                         vert_act--;
                     else
                         vert_act++;
+                    actual.setZ(vert_act);
                 }
-                if (vert_act == vert_soll && inCalibration == false)
-                    StopVert();
                 vert_ink2_pressed = false;
             }
         }
@@ -412,9 +415,8 @@ namespace Bachelorarbeit
                         turn_act--;
                     else
                         turn_act++;
+                    actual.setPhi(turn_act);
                 }
-                if (turn_act == turn_soll && inCalibration == false)
-                    StopTurn();
                 turn_ink2_pressed = false;
             }
         }
@@ -437,8 +439,7 @@ namespace Bachelorarbeit
                 {
                     hor_act--;
                 }
-                if (hor_act == hor_soll && inCalibration == false)
-                    StopHor();
+                actual.setP(hor_act);
             }
         }
 
@@ -454,8 +455,7 @@ namespace Bachelorarbeit
                 {
                     grip_act--;
                 }
-                if (grip_act == grip_soll && inCalibration == false)
-                    StopGrip();
+                
             }
         }
 
@@ -506,48 +506,72 @@ namespace Bachelorarbeit
                     if (grip_null == false)
                         CheckPositionGrip();
                 }
-                
-                CheckGUI();
             }
 
-            VertPos.Text = "" + vert_act;
-            HorPos.Text = "" + hor_act;
-            TurnPos.Text = "" + turn_act;
+            
+
+        }
+
+        private void TimerGUI_Tick(Object sender, Object args)
+        {
+            if (calibrationFinished == true && emergencyStop == false)
+            {
+                CheckGUI();
+            }
+            VertPos.Text = "" + actual.getZ() + " / " + vert_act;
+            HorPos.Text = "" + actual.getP() + " / " + hor_act;
+            TurnPos.Text = "" + actual.getPhi();
             GripPos.Text = "" + grip_act;
 
-            VertTarPos.Text = "" + vert_soll;
-            HorTarPos.Text = "" + hor_soll;
-            TurnTarPos.Text = "" + turn_soll;
+            VertTarPos.Text = "" + setpoint.getZ();
+            HorTarPos.Text = "" + setpoint.getP();
+            TurnTarPos.Text = "" + setpoint.getPhi();
             GripTarPos.Text = "" + grip_soll;
-
         }
 
         private void CheckGUI()
         {
+            bool wasPressed = false;
+
             if (ButtonCalibrate.IsPressed == true)
                 Calibrate();
 
             if (ButtonUp.IsPressed == true)
+            {
                 GoUp();
+                wasPressed = true;
+            }
             else if (ButtonDown.IsPressed == true)
+            {
                 GoDown();
-            //else
-            //    StopHor();
-
-            if (ButtonLeft.IsPressed == true)
+                wasPressed = true;
+            }
+            else if (ButtonLeft.IsPressed == true)
+            {
                 TurnLeft();
+                wasPressed = true;
+            }
             else if (ButtonRight.IsPressed == true)
+            {
                 TurnRight();
-            //else
-            //    StopTurn();
-
-            if (ButtonFwd.IsPressed == true)
+                wasPressed = true;
+            }
+            else if (ButtonFwd.IsPressed == true)
+            {
                 GoFwd();
+                wasPressed = true;
+            }
             else if (ButtonBack.IsPressed == true)
+            {
                 GoBack();
-            //else
-            //    StopVert();
-                
+                wasPressed = true;
+            }
+            else if (wasPressed == true)
+            {
+                StopAll();
+                wasPressed = false;
+            }
+
             if (SetPoint.IsPressed == true)
             {
                 int p = 0;
@@ -561,7 +585,7 @@ namespace Bachelorarbeit
 
                 setpoint.setP(p);
                 setpoint.setZ(z);
-               setpoint.setPhi(phi);
+                setpoint.setPhi(phi);
             }
             
         }
@@ -578,27 +602,27 @@ namespace Bachelorarbeit
                 GoDown();
             else if (actual.getZ() >= setpoint.getZ() + tube || actual.getZ() >= VERT_MAX)
                 GoUp();
-            else if (actual.getZ() < setpoint.getZ() + tube && actual.getZ() > setpoint.getZ() - tube)
+            else if (actual.getZ() < setpoint.getZ() + tube && actual.getZ() > setpoint.getZ() - tube || actual.getZ() >= VERT_MAX - tube)
                 StopVert();
         }
 
         private void CheckPositionTurn()
         {
-            if (turn_act <= turn_soll - tube || turn_act <= 0)
+            if (actual.getPhi() <= setpoint.getPhi() - tube || actual.getPhi() <= 0)
                 TurnLeft();
-            else if (turn_act >= turn_soll + tube || turn_act >= TURN_MAX)
+            else if (actual.getPhi() >= setpoint.getPhi() + tube || actual.getPhi() >= TURN_MAX)
                 TurnRight();
-            else if (turn_act < turn_soll + tube && turn_act > turn_soll - tube)
+            else if (actual.getPhi() < setpoint.getPhi() + tube && actual.getPhi() > setpoint.getPhi() - tube || actual.getPhi() >= TURN_MAX - tube)
                 StopTurn();
         }
 
         private void CheckPositionHor()
         {
-            if (hor_act <= hor_soll - tube || hor_act <= 0)
+            if (actual.getP() <= setpoint.getP() - tube || actual.getP() <= 0)
                 GoFwd();
-            else if (hor_act >= hor_soll + tube || hor_act >= HOR_MAX)
+            else if (actual.getP() >= setpoint.getP() + tube || actual.getP() >= HOR_MAX)
                 GoBack();
-            else if (hor_act < hor_soll + tube && hor_act > hor_soll - tube)
+            else if (actual.getP() < setpoint.getP() + tube && actual.getP() > setpoint.getP() - tube || actual.getP() >= HOR_MAX - tube)
                 StopHor();
         }
 
@@ -608,8 +632,16 @@ namespace Bachelorarbeit
                 CloseGrip();
             else if (grip_act >= grip_soll + tube || grip_act >= GRIP_MAX)
                 OpenGrip();
-            else if (grip_act < grip_soll + tube && grip_act > grip_soll - tube)
+            else if (grip_act < grip_soll + tube && grip_act > grip_soll - tube || grip_act >= GRIP_MAX - tube)
                 StopGrip();
+        }
+
+        private void StopAll()
+        {
+            StopVert();
+            StopHor();
+            StopTurn();
+            StopGrip();
         }
 
         private void StopVert()
