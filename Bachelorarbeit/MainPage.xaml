@@ -12,7 +12,6 @@
             <RelativePanel>
                 <StackPanel x:Name="Vert" HorizontalAlignment="Center" VerticalAlignment="Bottom">
                     <TextBlock x:Name="Vertical" Text="Vertikale Achse" Margin="10,10,10,0" TextAlignment="Center" FontSize="26.667" />
-                    <Ellipse x:Name="VertActive" Fill="LightGray" Stroke="White" Width="50" Height="50" Margin="10"/>
                     <TextBlock x:Name="VertAction" Text="steht still..." Margin="10,10,10,10" TextAlignment="Center" FontSize="26.667" />
                     <TextBlock Margin="10,10,10,10" TextAlignment="Center" FontSize="26.667" >Ist Position:<LineBreak />Schritte / cm</TextBlock>
                     <TextBlock x:Name="VertPos" Text="0000 / 0000" Margin="10,10,10,10" TextAlignment="Center" FontSize="26.667" />
@@ -24,7 +23,6 @@
 
                 <StackPanel x:Name="Hor" HorizontalAlignment="Center" VerticalAlignment="Center" RelativePanel.RightOf="Vert">
                     <TextBlock x:Name="Horizontal" Text="Horizontale Achse" Margin="10,10,10,0" TextAlignment="Center" FontSize="26.667" />
-                    <Ellipse x:Name="HorActive" Fill="LightGray" Stroke="White" Width="50" Height="50" Margin="10"/>
                     <TextBlock x:Name="HorAction" Text="steht still..." Margin="10,10,10,10" TextAlignment="Center" FontSize="26.667" />
                     <TextBlock Margin="10,10,10,10" TextAlignment="Center" FontSize="26.667" >Ist Position:<LineBreak />Schritte / cm</TextBlock>
                     <TextBlock x:Name="HorPos" Text="0000 / 0000" Margin="10,10,10,10" TextAlignment="Center" FontSize="26.667" />
@@ -36,7 +34,6 @@
 
                 <StackPanel x:Name="Turn" HorizontalAlignment="Center" VerticalAlignment="Center" RelativePanel.RightOf="Hor">
                     <TextBlock x:Name="TurnAxis" Text="Drehachse" Margin="10,10,10,0" TextAlignment="Center" FontSize="26.667" />
-                    <Ellipse x:Name="TurnActive" Fill="LightGray" Stroke="White" Width="50" Height="50" Margin="10"/>
                     <TextBlock x:Name="TurnAction" Text="steht still..." Margin="10,10,10,10" TextAlignment="Center" FontSize="26.667" />
                     <TextBlock Margin="10,10,10,10" TextAlignment="Center" FontSize="26.667" >Ist Position:<LineBreak />Schritte / cm</TextBlock>
                     <TextBlock x:Name="TurnPos" Text="0000 / 0000" Margin="10,10,10,10" TextAlignment="Center" FontSize="26.667" />
@@ -48,7 +45,6 @@
 
                 <StackPanel x:Name="Grip" HorizontalAlignment="Center" VerticalAlignment="Center" RelativePanel.RightOf="Turn">
                     <TextBlock x:Name="Gripper" Text="Greifer" Margin="10,10,10,0" TextAlignment="Center" FontSize="26.667" />
-                    <Ellipse x:Name="GripActive" Fill="LightGray" Stroke="White" Width="50" Height="50" Margin="10"/>
                     <TextBlock x:Name="GripAction" Text="steht still..." Margin="10,10,10,10" TextAlignment="Center" FontSize="26.667" />
                     <TextBlock Margin="10,10,10,10" TextAlignment="Center" FontSize="26.667" >Ist Position:<LineBreak />Schritte / cm</TextBlock>
                     <TextBlock x:Name="GripPos" Text="0000 / 0000" Margin="10,10,10,10" TextAlignment="Center" FontSize="26.667" />

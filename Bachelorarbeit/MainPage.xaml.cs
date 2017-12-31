@@ -87,12 +87,12 @@ namespace Bachelorarbeit
 
         private SolidColorBrush redBrush = new SolidColorBrush(Windows.UI.Colors.Red);
         private SolidColorBrush grayBrush = new SolidColorBrush(Windows.UI.Colors.LightGray);
-        private DispatcherTimer timer;
-        private DispatcherTimer timerGUI;
+        private DispatcherTimer timer = new DispatcherTimer();
+        private DispatcherTimer timerGUI = new DispatcherTimer();
 
         private const int HOR_MAX = 700;
-        private const int VERT_MAX = 1600;
-        private const int TURN_MAX = 1800;
+        private const int VERT_MAX = 2000;
+        private const int TURN_MAX = 2000;
         private const int GRIP_MAX = 20;
 
         private int hor_act = HOR_MAX;
@@ -103,10 +103,10 @@ namespace Bachelorarbeit
         private const int hor_soll = 250;
         private const int vert_soll = 1000;
         private const int turn_soll = 500;
-        private const int grip_soll = 15;
+        private int grip_soll = 15;
         private int tube = 20;
-        private Punkt setpoint = new Punkt(hor_soll, turn_soll, vert_soll);
-        private Punkt actual = new Punkt();
+        private Point setpoint = new Point(hor_soll, turn_soll, vert_soll);
+        private Point actual = new Point();
 
         private bool inCalibration = false;
         private bool calibrationFinished = false;
@@ -117,24 +117,29 @@ namespace Bachelorarbeit
         private bool hor_null = true;
         private bool grip_null = true;
         private bool emergencyStop = false;
+        private bool wasPressed = false;
+
+        private int gui_counter = 0;
 
         public MainPage()
         {
             InitializeComponent();
             InitGPIO();
-            timer = new DispatcherTimer();
             timer.Interval = TimeSpan.FromMilliseconds(50);
             timer.Tick += Timer_Tick;
             if (vert_cal_pin != null)
             {
                 timer.Start();
             }
-            timerGUI = new DispatcherTimer();
-            timerGUI.Interval = TimeSpan.FromMilliseconds(500);
+            timerGUI.Interval = TimeSpan.FromMilliseconds(50);
             timerGUI.Tick += TimerGUI_Tick;
             timerGUI.Start();
 
             Calibrate();
+
+            HorIn.Text = "" + hor_soll;
+            VertIn.Text = "" + vert_soll;
+            TurnIn.Text = "" + turn_soll;
         }
 
         private void InitGPIO()
@@ -144,11 +149,8 @@ namespace Bachelorarbeit
             // Show an error if there is no GPIO controller
             if (gpio == null)
             {
-                //GpioStatus.Text = "There is no GPIO controller on this device.";
                 return;
             }
-
-            //var erfolg = GpioOpenStatus.PinOpened;
 
             //Ausgabgs GPIOs öffnen
             hor_enable_pin = gpio.OpenPin(HOR_ENABLE_PIN);
@@ -223,10 +225,6 @@ namespace Bachelorarbeit
             grip_cal_pin.ValueChanged += grip_cal_pin_ValueChanged;
             grip_step_pin.ValueChanged += grip_step_pin_ValueChanged;
 
-
-            //GpioStatus.Text = "GPIO pins initialized correctly.";
-
-            
         }
 
         private void SetGpioOut(GpioPin pin)
@@ -303,7 +301,6 @@ namespace Bachelorarbeit
                 emergencyStop = false;
                 if (turn_null == true)
                 {
-
                     turn_null = false;
                     Calibrate_Vert();
                 }
@@ -387,14 +384,19 @@ namespace Bachelorarbeit
         {
             if (vert_ink1_pin.Read() == GpioPinValue.High)
             {
-                if (vert_ink2_pressed == true)
-                {
-                    if (vert_ink2_pin.Read() == GpioPinValue.High)
-                        vert_act--;
-                    else
-                        vert_act++;
-                    actual.setZ(vert_act);
-                }
+                //if (vert_ink2_pressed == true)
+                //{
+                //    if (vert_ink2_pin.Read() == GpioPinValue.High)
+                //        vert_act--;
+                //    else
+                //        vert_act++;
+                //    actual.setZ(vert_act);
+                //}
+                if (vert_up_pin.Read() == GpioPinValue.High)
+                    vert_act--;
+                else if (vert_down_pin.Read() == GpioPinValue.High)
+                    vert_act++;
+                actual.setZ(vert_act);
                 vert_ink2_pressed = false;
             }
         }
@@ -409,14 +411,19 @@ namespace Bachelorarbeit
         {
             if (turn_ink1_pin.Read() == GpioPinValue.High)
             {
-                if (turn_ink2_pressed == true)
-                {
-                    if (turn_ink2_pin.Read() == GpioPinValue.High)
-                        turn_act--;
-                    else
-                        turn_act++;
-                    actual.setPhi(turn_act);
-                }
+                //if (turn_ink2_pressed == true)
+                //{
+                //    if (turn_ink2_pin.Read() == GpioPinValue.High)
+                //        turn_act--;
+                //    else
+                //        turn_act++;
+                //    actual.setPhi(turn_act);
+                //}
+                if (turn_right_pin.Read() == GpioPinValue.High)
+                    turn_act--;
+                else if (turn_left_pin.Read() == GpioPinValue.High)
+                    turn_act++;
+                actual.setPhi(turn_act);
                 turn_ink2_pressed = false;
             }
         }
@@ -455,7 +462,6 @@ namespace Bachelorarbeit
                 {
                     grip_act--;
                 }
-                
             }
         }
 
@@ -495,16 +501,27 @@ namespace Bachelorarbeit
 
             if (calibrationFinished == true && emergencyStop == false)
             {
+                CheckMaximumBorders();
+
                 if (FreeMovement.IsChecked == false)
                 {
-                    if (vert_null == false)
-                        CheckPositionVert();
-                    if (turn_null == false)
-                        CheckPositionTurn();
-                    if (hor_null == false)
-                        CheckPositionHor();
-                    if (grip_null == false)
-                        CheckPositionGrip();
+                    try
+                    {
+                        if (vert_null == false)// && ((vert_down_pin.Read() == GpioPinValue.Low) || (vert_up_pin.Read() == GpioPinValue.Low)))
+                            CheckPositionVert();
+                        if (turn_null == false)// && ((turn_left_pin.Read() == GpioPinValue.Low) || (turn_right_pin.Read() == GpioPinValue.Low)))
+                            CheckPositionTurn();
+                        if (hor_null == false)// && ((hor_fwd_pin.Read() == GpioPinValue.Low) || (hor_back_pin.Read() == GpioPinValue.Low)))
+                            CheckPositionHor();
+                        if (grip_null == false)// && ((grip_open_pin.Read() == GpioPinValue.Low) || (grip_close_pin.Read() == GpioPinValue.Low)))
+                            CheckPositionGrip();
+                    }
+                    catch
+                    {
+                        StopAll();
+                        throw;
+                    }
+                    
                 }
             }
 
@@ -518,21 +535,25 @@ namespace Bachelorarbeit
             {
                 CheckGUI();
             }
-            VertPos.Text = "" + actual.getZ() + " / " + vert_act;
-            HorPos.Text = "" + actual.getP() + " / " + hor_act;
-            TurnPos.Text = "" + actual.getPhi();
-            GripPos.Text = "" + grip_act;
+            gui_counter++;
+            if (gui_counter >= 10)
+            {
+                VertPos.Text = "" + actual.getZ() + " / " + vert_act;
+                HorPos.Text = "" + actual.getP() + " / " + hor_act;
+                TurnPos.Text = "" + actual.getPhi();
+                GripPos.Text = "" + grip_act;
 
-            VertTarPos.Text = "" + setpoint.getZ();
-            HorTarPos.Text = "" + setpoint.getP();
-            TurnTarPos.Text = "" + setpoint.getPhi();
-            GripTarPos.Text = "" + grip_soll;
+                VertTarPos.Text = "" + setpoint.getZ();
+                HorTarPos.Text = "" + setpoint.getP();
+                TurnTarPos.Text = "" + setpoint.getPhi();
+                GripTarPos.Text = "" + grip_soll;
+                gui_counter = 0;
+            }
+            
         }
 
         private void CheckGUI()
         {
-            bool wasPressed = false;
-
             if (ButtonCalibrate.IsPressed == true)
                 Calibrate();
 
@@ -564,6 +585,16 @@ namespace Bachelorarbeit
             else if (ButtonBack.IsPressed == true)
             {
                 GoBack();
+                wasPressed = true;
+            }
+            else if (ButtonOpen.IsPressed == true)
+            {
+                OpenGrip();
+                wasPressed = true;
+            }
+            else if (ButtonClose.IsPressed == true)
+            {
+                CloseGrip();
                 wasPressed = true;
             }
             else if (wasPressed == true)
@@ -598,12 +629,25 @@ namespace Bachelorarbeit
             //    GoUp();
             //else if (vert_act < vert_soll + tube && vert_act > vert_soll - tube)
             //    StopVert();
-            if (actual.getZ() <= setpoint.getZ() - tube || actual.getZ() <= 0)
-                GoDown();
-            else if (actual.getZ() >= setpoint.getZ() + tube || actual.getZ() >= VERT_MAX)
-                GoUp();
-            else if (actual.getZ() < setpoint.getZ() + tube && actual.getZ() > setpoint.getZ() - tube || actual.getZ() >= VERT_MAX - tube)
+            if (actual.getZ() >= VERT_MAX - tube)
+            {
                 StopVert();
+                setpoint.setZ(actual.getZ());
+            }
+            if (actual.getZ() <= setpoint.getZ() - tube || actual.getZ() <= 0)
+            {
+                GoDown();
+                return;
+            }
+            else if (actual.getZ() >= setpoint.getZ() + tube || actual.getZ() >= VERT_MAX)
+            {
+                GoUp();
+                return;
+            }
+            else if (actual.getZ() < setpoint.getZ() + tube && actual.getZ() > setpoint.getZ() - tube)
+                StopVert();
+            
+            
         }
 
         private void CheckPositionTurn()
@@ -612,7 +656,14 @@ namespace Bachelorarbeit
                 TurnLeft();
             else if (actual.getPhi() >= setpoint.getPhi() + tube || actual.getPhi() >= TURN_MAX)
                 TurnRight();
-            else if (actual.getPhi() < setpoint.getPhi() + tube && actual.getPhi() > setpoint.getPhi() - tube || actual.getPhi() >= TURN_MAX - tube)
+            else if (actual.getPhi() < setpoint.getPhi() + tube && actual.getPhi() > setpoint.getPhi() - tube)
+                StopTurn();
+            else if (actual.getPhi() >= TURN_MAX - tube)
+            {
+                StopTurn();
+                setpoint.setPhi(actual.getPhi());
+            }
+            else
                 StopTurn();
         }
 
@@ -622,7 +673,14 @@ namespace Bachelorarbeit
                 GoFwd();
             else if (actual.getP() >= setpoint.getP() + tube || actual.getP() >= HOR_MAX)
                 GoBack();
-            else if (actual.getP() < setpoint.getP() + tube && actual.getP() > setpoint.getP() - tube || actual.getP() >= HOR_MAX - tube)
+            else if (actual.getP() < setpoint.getP() + tube && actual.getP() > setpoint.getP() - tube)
+                StopHor();
+            else if (actual.getP() >= HOR_MAX - tube)
+            {
+                StopHor();
+                setpoint.setP(actual.getP());
+            }
+            else
                 StopHor();
         }
 
@@ -632,7 +690,26 @@ namespace Bachelorarbeit
                 CloseGrip();
             else if (grip_act >= grip_soll + tube || grip_act >= GRIP_MAX)
                 OpenGrip();
-            else if (grip_act < grip_soll + tube && grip_act > grip_soll - tube || grip_act >= GRIP_MAX - tube)
+            else if (grip_act < grip_soll + tube && grip_act > grip_soll - tube)
+                StopGrip();
+            else if (grip_act >= GRIP_MAX - tube)
+            {
+                StopGrip();
+                grip_soll = grip_act;
+            }
+            else
+                StopGrip();
+        }
+
+        private void CheckMaximumBorders()
+        {
+            if (actual.getP() >= HOR_MAX - tube)
+                StopHor();
+            if (actual.getPhi() >= TURN_MAX - tube)
+                StopTurn();
+            if (actual.getZ() >= VERT_MAX - tube)
+                StopVert();
+            if (grip_act >= GRIP_MAX - tube)
                 StopGrip();
         }
 
@@ -738,7 +815,6 @@ namespace Bachelorarbeit
         private void Calibrate_Hor()
         {
             inCalibration = true;
-            //hor_act = HOR_MAX;
             actual.setP(HOR_MAX);
             GoBack();
         }
@@ -746,7 +822,6 @@ namespace Bachelorarbeit
         private void Calibrate_Vert()
         {
             inCalibration = true;
-            //vert_act = VERT_MAX;
             actual.setZ(VERT_MAX);
             GoUp();
         }
@@ -754,7 +829,6 @@ namespace Bachelorarbeit
         private void Calibrate_Turn()
         {
             inCalibration = true;
-            //turn_act = TURN_MAX;
             actual.setPhi(TURN_MAX);
             TurnRight();
         }

@@ -6,20 +6,20 @@ using System.Threading.Tasks;
 
 namespace Bachelorarbeit
 {
-    class Punkt
+    class Point
     {
         private int p;
         private int phi;
         private int z;
 
-        public Punkt()
+        public Point()
         {
             this.p = 0;
             this.phi = 0;
             this.z = 0;
         }
 
-        public Punkt(int p = 0, int phi = 0, int z = 0)
+        public Point(int p = 0, int phi = 0, int z = 0)
         {
             this.p = p;
             this.phi = phi;
