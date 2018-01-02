@@ -90,22 +90,19 @@ namespace Bachelorarbeit
         private DispatcherTimer timer = new DispatcherTimer();
         private DispatcherTimer timerGUI = new DispatcherTimer();
 
-        private const int HOR_MAX = 700;
-        private const int VERT_MAX = 2000;
-        private const int TURN_MAX = 2000;
-        private const int GRIP_MAX = 20;
+        //private const int def.HOR_MAX = 700;
+        //private const int def.VERT_MAX = 2000;
+        //private const int def.TURN_MAX = 2000;
+        //private const int def.GRIP_MAX = 20;
 
-        private int hor_act = HOR_MAX;
-        private int vert_act = VERT_MAX;
-        private int turn_act = TURN_MAX;
-        private int grip_act = GRIP_MAX;
+        private int hor_act = def.P_MAX;
+        private int vert_act = def.Z_MAX;
+        private int turn_act = def.PHI_MAX;
+        private int grip_act = def.GRIP_MAX;
 
-        private const int hor_soll = 250;
-        private const int vert_soll = 1000;
-        private const int turn_soll = 500;
-        private int grip_soll = 15;
-        private int tube = 20;
-        private Point setpoint = new Point(hor_soll, turn_soll, vert_soll);
+        private int grip_soll = def.GRIP_SOLL;
+
+        private Point setpoint = new Point(def.P_SOLL, def.PHI_SOLL, def.Z_SOLL);
         private Point actual = new Point();
 
         private bool inCalibration = false;
@@ -137,9 +134,9 @@ namespace Bachelorarbeit
 
             Calibrate();
 
-            HorIn.Text = "" + hor_soll;
-            VertIn.Text = "" + vert_soll;
-            TurnIn.Text = "" + turn_soll;
+            HorIn.Text = "" + def.P_SOLL;
+            VertIn.Text = "" + def.Z_SOLL;
+            TurnIn.Text = "" + def.PHI_SOLL;
         }
 
         private void InitGPIO()
@@ -538,14 +535,14 @@ namespace Bachelorarbeit
             gui_counter++;
             if (gui_counter >= 10)
             {
-                VertPos.Text = "" + actual.getZ() + " / " + vert_act;
-                HorPos.Text = "" + actual.getP() + " / " + hor_act;
-                TurnPos.Text = "" + actual.getPhi();
+                VertPos.Text = actual.printZ();
+                HorPos.Text = actual.printP();
+                TurnPos.Text = actual.printPhi();
                 GripPos.Text = "" + grip_act;
 
-                VertTarPos.Text = "" + setpoint.getZ();
-                HorTarPos.Text = "" + setpoint.getP();
-                TurnTarPos.Text = "" + setpoint.getPhi();
+                VertTarPos.Text = setpoint.printZ();
+                HorTarPos.Text = setpoint.printP();
+                TurnTarPos.Text = setpoint.printPhi();
                 GripTarPos.Text = "" + grip_soll;
                 gui_counter = 0;
             }
@@ -618,33 +615,40 @@ namespace Bachelorarbeit
                 setpoint.setZ(z);
                 setpoint.setPhi(phi);
             }
-            
+            else if (random.IsPressed == true)
+            {
+                Random rand = new Random();
+                setpoint.setZ(rand.Next(0, def.Z_MAX));
+                setpoint.setPhi(rand.Next(0, def.PHI_MAX));
+                setpoint.setP(rand.Next(0, def.P_MAX));
+            }
+
         }
 
         private void CheckPositionVert()
         {
-            //if (vert_act <= vert_soll - tube || vert_act <= 0)
+            //if (vert_act <= vert_soll - def.tube || vert_act <= 0)
             //    GoDown();
-            //else if (vert_act >= vert_soll + tube || vert_act >= VERT_MAX)
+            //else if (vert_act >= vert_soll + def.tube || vert_act >= def.VERT_MAX)
             //    GoUp();
-            //else if (vert_act < vert_soll + tube && vert_act > vert_soll - tube)
+            //else if (vert_act < vert_soll + def.tube && vert_act > vert_soll - def.tube)
             //    StopVert();
-            if (actual.getZ() >= VERT_MAX - tube)
+            if (actual.getZ() >= def.Z_MAX - def.TUBE)
             {
                 StopVert();
                 setpoint.setZ(actual.getZ());
             }
-            if (actual.getZ() <= setpoint.getZ() - tube || actual.getZ() <= 0)
+            if (actual.getZ() <= setpoint.getZ() - def.TUBE || actual.getZ() <= 0)
             {
                 GoDown();
                 return;
             }
-            else if (actual.getZ() >= setpoint.getZ() + tube || actual.getZ() >= VERT_MAX)
+            else if (actual.getZ() >= setpoint.getZ() + def.TUBE || actual.getZ() >= def.Z_MAX)
             {
                 GoUp();
                 return;
             }
-            else if (actual.getZ() < setpoint.getZ() + tube && actual.getZ() > setpoint.getZ() - tube)
+            else if (actual.getZ() < setpoint.getZ() + def.TUBE && actual.getZ() > setpoint.getZ() - def.TUBE)
                 StopVert();
             
             
@@ -652,13 +656,13 @@ namespace Bachelorarbeit
 
         private void CheckPositionTurn()
         {
-            if (actual.getPhi() <= setpoint.getPhi() - tube || actual.getPhi() <= 0)
+            if (actual.getPhi() <= setpoint.getPhi() - def.TUBE || actual.getPhi() <= 0)
                 TurnLeft();
-            else if (actual.getPhi() >= setpoint.getPhi() + tube || actual.getPhi() >= TURN_MAX)
+            else if (actual.getPhi() >= setpoint.getPhi() + def.TUBE || actual.getPhi() >= def.PHI_MAX)
                 TurnRight();
-            else if (actual.getPhi() < setpoint.getPhi() + tube && actual.getPhi() > setpoint.getPhi() - tube)
+            else if (actual.getPhi() < setpoint.getPhi() + def.TUBE && actual.getPhi() > setpoint.getPhi() - def.TUBE)
                 StopTurn();
-            else if (actual.getPhi() >= TURN_MAX - tube)
+            else if (actual.getPhi() >= def.PHI_MAX - def.TUBE)
             {
                 StopTurn();
                 setpoint.setPhi(actual.getPhi());
@@ -669,13 +673,13 @@ namespace Bachelorarbeit
 
         private void CheckPositionHor()
         {
-            if (actual.getP() <= setpoint.getP() - tube || actual.getP() <= 0)
+            if (actual.getP() <= setpoint.getP() - def.TUBE || actual.getP() <= 0)
                 GoFwd();
-            else if (actual.getP() >= setpoint.getP() + tube || actual.getP() >= HOR_MAX)
+            else if (actual.getP() >= setpoint.getP() + def.TUBE || actual.getP() >= def.P_MAX)
                 GoBack();
-            else if (actual.getP() < setpoint.getP() + tube && actual.getP() > setpoint.getP() - tube)
+            else if (actual.getP() < setpoint.getP() + def.TUBE && actual.getP() > setpoint.getP() - def.TUBE)
                 StopHor();
-            else if (actual.getP() >= HOR_MAX - tube)
+            else if (actual.getP() >= def.P_MAX - def.TUBE)
             {
                 StopHor();
                 setpoint.setP(actual.getP());
@@ -686,13 +690,13 @@ namespace Bachelorarbeit
 
         private void CheckPositionGrip()
         {
-            if (grip_act <= grip_soll - tube || grip_act <= 0)
+            if (grip_act <= grip_soll - def.TUBE || grip_act <= 0)
                 CloseGrip();
-            else if (grip_act >= grip_soll + tube || grip_act >= GRIP_MAX)
+            else if (grip_act >= grip_soll + def.TUBE || grip_act >= def.GRIP_MAX)
                 OpenGrip();
-            else if (grip_act < grip_soll + tube && grip_act > grip_soll - tube)
+            else if (grip_act < grip_soll + def.TUBE && grip_act > grip_soll - def.TUBE)
                 StopGrip();
-            else if (grip_act >= GRIP_MAX - tube)
+            else if (grip_act >= def.GRIP_MAX - def.TUBE)
             {
                 StopGrip();
                 grip_soll = grip_act;
@@ -703,13 +707,13 @@ namespace Bachelorarbeit
 
         private void CheckMaximumBorders()
         {
-            if (actual.getP() >= HOR_MAX - tube)
+            if (actual.getP() >= def.P_MAX - def.TUBE)
                 StopHor();
-            if (actual.getPhi() >= TURN_MAX - tube)
+            if (actual.getPhi() >= def.PHI_MAX - def.TUBE)
                 StopTurn();
-            if (actual.getZ() >= VERT_MAX - tube)
+            if (actual.getZ() >= def.Z_MAX - def.TUBE)
                 StopVert();
-            if (grip_act >= GRIP_MAX - tube)
+            if (grip_act >= def.GRIP_MAX - def.TUBE)
                 StopGrip();
         }
 
@@ -815,28 +819,28 @@ namespace Bachelorarbeit
         private void Calibrate_Hor()
         {
             inCalibration = true;
-            actual.setP(HOR_MAX);
+            actual.setP(def.P_MAX);
             GoBack();
         }
 
         private void Calibrate_Vert()
         {
             inCalibration = true;
-            actual.setZ(VERT_MAX);
+            actual.setZ(def.Z_MAX);
             GoUp();
         }
 
         private void Calibrate_Turn()
         {
             inCalibration = true;
-            actual.setPhi(TURN_MAX);
+            actual.setPhi(def.PHI_MAX);
             TurnRight();
         }
 
         private void Calibrate_Grip()
         {
             inCalibration = true;
-            grip_act = GRIP_MAX;
+            grip_act = def.GRIP_MAX;
             OpenGrip();
         }
 

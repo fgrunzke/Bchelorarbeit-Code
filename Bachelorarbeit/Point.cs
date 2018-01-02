@@ -12,43 +12,73 @@ namespace Bachelorarbeit
         private int phi;
         private int z;
 
+        private double P_FACT = def.P_VALUE;
+        private double PHI_FACT = def.PHI_VALUE;
+        private double Z_FACT = def.Z_VALUE;
+
         public Point()
         {
-            this.p = 0;
-            this.phi = 0;
-            this.z = 0;
-        }
+            p = 0;
+            phi = 0;
+            z = 0;
 
-        public Point(int p = 0, int phi = 0, int z = 0)
+            P_FACT /= def.P_MAX;
+            PHI_FACT /= def.PHI_MAX;
+            Z_FACT /= -def.Z_MAX;
+    }
+
+        public Point(int pIn = 0, int phiIn = 0, int zIn = 0)
         {
-            this.p = p;
-            this.phi = phi;
-            this.z = z;
+            p = pIn;
+            phi = phiIn;
+            z = zIn;
+
+            P_FACT = def.P_VALUE / def.P_MAX;
+            PHI_FACT = def.PHI_VALUE / def.PHI_MAX;
+            Z_FACT = -def.Z_VALUE / def.Z_MAX;
         }
 
         public int getP()
         {
-            return this.p;
+            return p;
         }
         public int getPhi()
         {
-            return this.phi;
+            return phi;
         }
         public int getZ()
         {
-            return this.z;
+            return z;
         }
-        public void setP(int p)
+        public void setP(int pIn)
         {
-            this.p = p;
+            p = pIn;
         }
-        public void setPhi(int phi)
+        public void setPhi(int phiIn)
         {
-            this.phi = phi;
+            phi = phiIn;
         }
-        public void setZ(int z)
+        public void setZ(int zIn)
         {
-            this.z = z;
+            z = zIn;
+        }
+        public string printP()
+        {
+            double value = ((p * P_FACT) / 10);
+            string ret = String.Format("{0} / {1:0.00}cm",p, value);
+            return ret;// "" + this.p + " / " + (this.p * P_FACT)/10;
+        }
+        public string printPhi()
+        {
+            double value = phi * PHI_FACT;
+            string ret = String.Format("{0} / {1:000.00}°", phi, value);
+            return ret;// this.phi + " / " + (this.phi * PHI_FACT);
+        }
+        public string printZ()
+        {
+            double value = (z * Z_FACT) / 10;
+            string ret = String.Format("{0} / {1:00.00}cm", z, value);
+            return ret;// "" + this.z + " / " + (this.z * Z_FACT)/10;
         }
     }
 }
