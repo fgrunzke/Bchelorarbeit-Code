@@ -21,83 +21,52 @@ namespace Bachelorarbeit
     {
         //Ausgangs GPIOs
         //Horizontaler Motor
-        private const int HOR_FWD_PIN = 26;
-        private const int HOR_BACK_PIN = 19;
-        private const int HOR_ENABLE_PIN = 13;
-        private GpioPin hor_fwd_pin;
-        private GpioPin hor_back_pin;
-        private GpioPin hor_enable_pin;
+        private GpioPin p_fwd_pin;
+        private GpioPin p_back_pin;
+        private GpioPin p_enable_pin;
 
         //Vertikaler Motor
-        private const int VERT_UP_PIN = 21;
-        private const int VERT_DOWN_PIN = 20;
-        private const int VERT_ENABLE_PIN = 16;
-        private GpioPin vert_up_pin;
-        private GpioPin vert_down_pin;
-        private GpioPin vert_enable_pin;
+        private GpioPin z_up_pin;
+        private GpioPin z_down_pin;
+        private GpioPin z_enable_pin;
 
         //Motor zur Drehung um die Mittelachse
-        private const int TURN_RIGHT_PIN = 12;
-        private const int TURN_LEFT_PIN = 6;
-        private const int TURN_ENABLE_PIN = 5;
-        private GpioPin turn_right_pin;
-        private GpioPin turn_left_pin;
-        private GpioPin turn_enable_pin;
+        private GpioPin phi_right_pin;
+        private GpioPin phi_left_pin;
+        private GpioPin phi_enable_pin;
 
         //Motor zum Öffnen/Schließen der Greifzange
-        private const int GRIP_OPEN_PIN = 11;
-        private const int GRIP_CLOSE_PIN = 8;
-        private const int GRIP_ENABLE_PIN = 7;
         private GpioPin grip_open_pin;
         private GpioPin grip_close_pin;
         private GpioPin grip_enable_pin;
 
         //Eingangs GPIOs
         //Schrittzähler Horizontale Achse
-        private const int HOR_STEP_PIN = 9;
-        private GpioPin hor_step_pin;
+        private GpioPin p_step_pin;
 
         //Inkrementalgeber Vertikale Achse
-        private const int VERT_INK1_PIN = 25;
-        private const int VERT_INK2_PIN = 24;
-        private GpioPin vert_ink1_pin;
-        private GpioPin vert_ink2_pin;
+        private GpioPin z_ink1_pin;
+        private GpioPin z_ink2_pin;
 
         //Inkrementalgeber der Drehung
-        private const int TURN_INK1_PIN = 22;
-        private const int TURN_INK2_PIN = 23;
-        private GpioPin turn_ink1_pin;
-        private GpioPin turn_ink2_pin;
+        private GpioPin phi_ink1_pin;
+        private GpioPin phi_ink2_pin;
 
         //Schrittzähler des Greifers
-        private const int GRIP_STEP_PIN = 10;
         private GpioPin grip_step_pin;
 
         //Kalibrierungsschalter
-        private const int HOR_CAL_PIN = 27;
-        private const int VERT_CAL_PIN = 17;
-        private const int TURN_CAL_PIN = 18;
-        private const int GRIP_CAL_PIN = 4;
-        private GpioPin hor_cal_pin;
-        private GpioPin vert_cal_pin;
-        private GpioPin turn_cal_pin;
+        private GpioPin p_cal_pin;
+        private GpioPin z_cal_pin;
+        private GpioPin phi_cal_pin;
         private GpioPin grip_cal_pin;
-        private const double input_timeout = 0.1;
-
-
-        private SolidColorBrush redBrush = new SolidColorBrush(Windows.UI.Colors.Red);
-        private SolidColorBrush grayBrush = new SolidColorBrush(Windows.UI.Colors.LightGray);
+        
         private DispatcherTimer timer = new DispatcherTimer();
         private DispatcherTimer timerGUI = new DispatcherTimer();
 
-        //private const int def.HOR_MAX = 700;
-        //private const int def.VERT_MAX = 2000;
-        //private const int def.TURN_MAX = 2000;
-        //private const int def.GRIP_MAX = 20;
-
-        private int hor_act = def.P_MAX;
-        private int vert_act = def.Z_MAX;
-        private int turn_act = def.PHI_MAX;
+        private int p_act = def.P_MAX;
+        private int z_act = def.Z_MAX;
+        private int phi_act = def.PHI_MAX;
         private int grip_act = def.GRIP_MAX;
 
         private int grip_soll = def.GRIP_SOLL;
@@ -107,11 +76,11 @@ namespace Bachelorarbeit
 
         private bool inCalibration = false;
         private bool calibrationFinished = false;
-        private bool vert_ink2_pressed = false;
-        private bool vert_null = true;
-        private bool turn_ink2_pressed = false;
-        private bool turn_null = true;
-        private bool hor_null = true;
+        private bool z_ink2_pressed = false;
+        private bool z_null = true;
+        private bool phi_ink2_pressed = false;
+        private bool phi_null = true;
+        private bool p_null = true;
         private bool grip_null = true;
         private bool emergencyStop = false;
         private bool wasPressed = false;
@@ -124,7 +93,7 @@ namespace Bachelorarbeit
             InitGPIO();
             timer.Interval = TimeSpan.FromMilliseconds(50);
             timer.Tick += Timer_Tick;
-            if (vert_cal_pin != null)
+            if (z_cal_pin != null)
             {
                 timer.Start();
             }
@@ -149,48 +118,48 @@ namespace Bachelorarbeit
                 return;
             }
 
-            //Ausgabgs GPIOs öffnen
-            hor_enable_pin = gpio.OpenPin(HOR_ENABLE_PIN);
-            hor_fwd_pin = gpio.OpenPin(HOR_FWD_PIN);
-            hor_back_pin = gpio.OpenPin(HOR_BACK_PIN);
+            //Ausgangs GPIOs öffnen
+            p_enable_pin = gpio.OpenPin(def.P_ENABLE_PIN);
+            p_fwd_pin = gpio.OpenPin(def.P_FWD_PIN);
+            p_back_pin = gpio.OpenPin(def.P_BACK_PIN);
 
-            vert_enable_pin = gpio.OpenPin(VERT_ENABLE_PIN);
-            vert_up_pin = gpio.OpenPin(VERT_UP_PIN);
-            vert_down_pin = gpio.OpenPin(VERT_DOWN_PIN);
+            z_enable_pin = gpio.OpenPin(def.Z_ENABLE_PIN);
+            z_up_pin = gpio.OpenPin(def.Z_UP_PIN);
+            z_down_pin = gpio.OpenPin(def.Z_DOWN_PIN);
 
-            turn_enable_pin = gpio.OpenPin(TURN_ENABLE_PIN);
-            turn_left_pin = gpio.OpenPin(TURN_LEFT_PIN);
-            turn_right_pin = gpio.OpenPin(TURN_RIGHT_PIN);
+            phi_enable_pin = gpio.OpenPin(def.PHI_ENABLE_PIN);
+            phi_left_pin = gpio.OpenPin(def.PHI_LEFT_PIN);
+            phi_right_pin = gpio.OpenPin(def.PHI_RIGHT_PIN);
 
-            grip_enable_pin = gpio.OpenPin(GRIP_ENABLE_PIN);
-            grip_open_pin = gpio.OpenPin(GRIP_OPEN_PIN);
-            grip_close_pin = gpio.OpenPin(GRIP_CLOSE_PIN);
+            grip_enable_pin = gpio.OpenPin(def.GRIP_ENABLE_PIN);
+            grip_open_pin = gpio.OpenPin(def.GRIP_OPEN_PIN);
+            grip_close_pin = gpio.OpenPin(def.GRIP_CLOSE_PIN);
 
             //Eingangs GPIOs öffnen
-            hor_step_pin = gpio.OpenPin(HOR_STEP_PIN);
-            vert_ink1_pin = gpio.OpenPin(VERT_INK1_PIN);
-            vert_ink2_pin = gpio.OpenPin(VERT_INK2_PIN);
-            turn_ink1_pin = gpio.OpenPin(TURN_INK1_PIN);
-            turn_ink2_pin = gpio.OpenPin(TURN_INK2_PIN);
-            grip_step_pin = gpio.OpenPin(GRIP_STEP_PIN);
+            p_step_pin = gpio.OpenPin(def.P_STEP_PIN);
+            z_ink1_pin = gpio.OpenPin(def.Z_INK1_PIN);
+            z_ink2_pin = gpio.OpenPin(def.Z_INK2_PIN);
+            phi_ink1_pin = gpio.OpenPin(def.PHI_INK1_PIN);
+            phi_ink2_pin = gpio.OpenPin(def.PHI_INK2_PIN);
+            grip_step_pin = gpio.OpenPin(def.GRIP_STEP_PIN);
 
-            hor_cal_pin = gpio.OpenPin(HOR_CAL_PIN);
-            vert_cal_pin = gpio.OpenPin(VERT_CAL_PIN);
-            turn_cal_pin = gpio.OpenPin(TURN_CAL_PIN);
-            grip_cal_pin = gpio.OpenPin(GRIP_CAL_PIN);
+            p_cal_pin = gpio.OpenPin(def.P_CAL_PIN);
+            z_cal_pin = gpio.OpenPin(def.Z_CAL_PIN);
+            phi_cal_pin = gpio.OpenPin(def.PHI_CAL_PIN);
+            grip_cal_pin = gpio.OpenPin(def.GRIP_CAL_PIN);
 
             //Ausgangs GPIOs konfigurieren und initialisieren
-            SetGpioOut(vert_enable_pin);
-            SetGpioOut(vert_up_pin);
-            SetGpioOut(vert_down_pin);
+            SetGpioOut(z_enable_pin);
+            SetGpioOut(z_up_pin);
+            SetGpioOut(z_down_pin);
 
-            SetGpioOut(turn_enable_pin);
-            SetGpioOut(turn_left_pin);
-            SetGpioOut(turn_right_pin);
+            SetGpioOut(phi_enable_pin);
+            SetGpioOut(phi_left_pin);
+            SetGpioOut(phi_right_pin);
 
-            SetGpioOut(hor_enable_pin);
-            SetGpioOut(hor_fwd_pin);
-            SetGpioOut(hor_back_pin);
+            SetGpioOut(p_enable_pin);
+            SetGpioOut(p_fwd_pin);
+            SetGpioOut(p_back_pin);
 
             SetGpioOut(grip_enable_pin);
             SetGpioOut(grip_open_pin);
@@ -198,27 +167,27 @@ namespace Bachelorarbeit
 
             //Eingangs GPIOs konfigurieren, entprellen und Evnetlistener Registrieren
 
-            SetGpioIn(vert_cal_pin);
-            SetGpioIn(vert_ink1_pin, input_timeout);
-            SetGpioIn(vert_ink2_pin, input_timeout);
-            vert_cal_pin.ValueChanged += vert_cal_pin_ValueChanged;
-            vert_ink1_pin.ValueChanged += vert_ink1_pin_ValueChanged;
-            vert_ink2_pin.ValueChanged += vert_ink2_pin_ValueChanged;
+            SetGpioIn(z_cal_pin);
+            SetGpioIn(z_ink1_pin, def.input_timeout);
+            SetGpioIn(z_ink2_pin, def.input_timeout);
+            z_cal_pin.ValueChanged += z_cal_pin_ValueChanged;
+            z_ink1_pin.ValueChanged += z_ink1_pin_ValueChanged;
+            z_ink2_pin.ValueChanged += z_ink2_pin_ValueChanged;
 
-            SetGpioIn(turn_cal_pin);
-            SetGpioIn(turn_ink1_pin, input_timeout);
-            SetGpioIn(turn_ink2_pin, input_timeout);
-            turn_cal_pin.ValueChanged += turn_cal_pin_ValueChanged;
-            turn_ink1_pin.ValueChanged += turn_ink1_pin_ValueChanged;
-            turn_ink2_pin.ValueChanged += turn_ink2_pin_ValueChanged;
+            SetGpioIn(phi_cal_pin);
+            SetGpioIn(phi_ink1_pin, def.input_timeout);
+            SetGpioIn(phi_ink2_pin, def.input_timeout);
+            phi_cal_pin.ValueChanged += phi_cal_pin_ValueChanged;
+            phi_ink1_pin.ValueChanged += phi_ink1_pin_ValueChanged;
+            phi_ink2_pin.ValueChanged += phi_ink2_pin_ValueChanged;
 
-            SetGpioIn(hor_cal_pin);
-            SetGpioIn(hor_step_pin, input_timeout);
-            hor_cal_pin.ValueChanged += hor_cal_pin_ValueChanged;
-            hor_step_pin.ValueChanged += hor_step_pin_ValueChanged;
+            SetGpioIn(p_cal_pin);
+            SetGpioIn(p_step_pin, def.input_timeout);
+            p_cal_pin.ValueChanged += p_cal_pin_ValueChanged;
+            p_step_pin.ValueChanged += p_step_pin_ValueChanged;
 
             SetGpioIn(grip_cal_pin);
-            SetGpioIn(grip_step_pin, input_timeout);
+            SetGpioIn(grip_step_pin, def.input_timeout);
             grip_cal_pin.ValueChanged += grip_cal_pin_ValueChanged;
             grip_step_pin.ValueChanged += grip_step_pin_ValueChanged;
 
@@ -236,34 +205,34 @@ namespace Bachelorarbeit
             pin.DebounceTimeout = TimeSpan.FromMilliseconds(debounce);
         }
 
-        private void vert_cal_pin_ValueChanged(GpioPin sender, GpioPinValueChangedEventArgs e)
+        private void z_cal_pin_ValueChanged(GpioPin sender, GpioPinValueChangedEventArgs e)
         {
-            if (vert_cal_pin.Read() == GpioPinValue.High)
+            if (z_cal_pin.Read() == GpioPinValue.High)
             {
-                StopVert();
+                StopZ();
 
                 if (inCalibration == true)
                 {
                     //vert_cal = false;
                     //if(vert_cal == turn_cal == false)
                     inCalibration = false;
-                    Null_Vert();
+                    Null_Z();
                 }
                 else
                 {
-                    Calibrate_Vert();
+                    Calibrate_Z();
                 }
             }
 
-            if (vert_cal_pin.Read() == GpioPinValue.Low)
+            if (z_cal_pin.Read() == GpioPinValue.Low)
             {
-                StopVert();
-                vert_act = 0;
+                StopZ();
+                z_act = 0;
                 emergencyStop = false;
-                if (vert_null == true)
+                if (z_null == true)
                 {
 
-                    vert_null = false;
+                    z_null = false;
                     calibrationFinished = true;
                     
                 }
@@ -274,32 +243,32 @@ namespace Bachelorarbeit
             }
         }
 
-        private void turn_cal_pin_ValueChanged(GpioPin sender, GpioPinValueChangedEventArgs e)
+        private void phi_cal_pin_ValueChanged(GpioPin sender, GpioPinValueChangedEventArgs e)
         {
-            if (turn_cal_pin.Read() == GpioPinValue.High)
+            if (phi_cal_pin.Read() == GpioPinValue.High)
             {
-                StopTurn();
+                StopPhi();
 
                 if (inCalibration == false)
                 {
                     inCalibration = false;
-                    Null_Turn();
+                    Null_Phi();
                 }
                 else
                 {
-                    Calibrate_Turn();
+                    Calibrate_Phi();
                 }
             }
 
-            if (turn_cal_pin.Read() == GpioPinValue.Low)
+            if (phi_cal_pin.Read() == GpioPinValue.Low)
             {
-                StopTurn();
-                turn_act = 0;
+                StopPhi();
+                phi_act = 0;
                 emergencyStop = false;
-                if (turn_null == true)
+                if (phi_null == true)
                 {
-                    turn_null = false;
-                    Calibrate_Vert();
+                    phi_null = false;
+                    Calibrate_Z();
                 }
                 else
                 {
@@ -308,31 +277,31 @@ namespace Bachelorarbeit
             }
         }
 
-        private void hor_cal_pin_ValueChanged(GpioPin sender, GpioPinValueChangedEventArgs e)
+        private void p_cal_pin_ValueChanged(GpioPin sender, GpioPinValueChangedEventArgs e)
         {
-            if (hor_cal_pin.Read() == GpioPinValue.High)
+            if (p_cal_pin.Read() == GpioPinValue.High)
             {
-                StopHor();
+                StopP();
 
                 if (inCalibration == false)
                 {
                     inCalibration = false;
-                    Null_Hor();
+                    Null_P();
                 }
                 else
                 {
-                    Calibrate_Hor();
+                    Calibrate_P();
                 }
             }
 
-            if (hor_cal_pin.Read() == GpioPinValue.Low)
+            if (p_cal_pin.Read() == GpioPinValue.Low)
             {
-                StopHor();
-                hor_act = 0;
+                StopP();
+                p_act = 0;
                 emergencyStop = false;
-                if (hor_null == true)
+                if (p_null == true)
                 {
-                    hor_null = false;
+                    p_null = false;
                     Calibrate_Grip();
                 }
                 else
@@ -368,7 +337,7 @@ namespace Bachelorarbeit
                 {
 
                     grip_null = false;
-                    Calibrate_Turn();
+                    Calibrate_Phi();
                 }
                 else
                 {
@@ -377,9 +346,9 @@ namespace Bachelorarbeit
             }
         }
 
-        private void vert_ink1_pin_ValueChanged(GpioPin sender, GpioPinValueChangedEventArgs e)
+        private void z_ink1_pin_ValueChanged(GpioPin sender, GpioPinValueChangedEventArgs e)
         {
-            if (vert_ink1_pin.Read() == GpioPinValue.High)
+            if (z_ink1_pin.Read() == GpioPinValue.High)
             {
                 //if (vert_ink2_pressed == true)
                 //{
@@ -389,24 +358,24 @@ namespace Bachelorarbeit
                 //        vert_act++;
                 //    actual.setZ(vert_act);
                 //}
-                if (vert_up_pin.Read() == GpioPinValue.High)
-                    vert_act--;
-                else if (vert_down_pin.Read() == GpioPinValue.High)
-                    vert_act++;
-                actual.setZ(vert_act);
-                vert_ink2_pressed = false;
+                if (z_up_pin.Read() == GpioPinValue.High)
+                    z_act--;
+                else if (z_down_pin.Read() == GpioPinValue.High)
+                    z_act++;
+                actual.setZ(z_act);
+                z_ink2_pressed = false;
             }
         }
 
-        private void vert_ink2_pin_ValueChanged(GpioPin sender, GpioPinValueChangedEventArgs e)
+        private void z_ink2_pin_ValueChanged(GpioPin sender, GpioPinValueChangedEventArgs e)
         {
-            if (vert_ink2_pin.Read() == GpioPinValue.High)
-                vert_ink2_pressed = true;
+            if (z_ink2_pin.Read() == GpioPinValue.High)
+                z_ink2_pressed = true;
         }
 
-        private void turn_ink1_pin_ValueChanged(GpioPin sender, GpioPinValueChangedEventArgs e)
+        private void phi_ink1_pin_ValueChanged(GpioPin sender, GpioPinValueChangedEventArgs e)
         {
-            if (turn_ink1_pin.Read() == GpioPinValue.High)
+            if (phi_ink1_pin.Read() == GpioPinValue.High)
             {
                 //if (turn_ink2_pressed == true)
                 //{
@@ -416,34 +385,34 @@ namespace Bachelorarbeit
                 //        turn_act++;
                 //    actual.setPhi(turn_act);
                 //}
-                if (turn_right_pin.Read() == GpioPinValue.High)
-                    turn_act--;
-                else if (turn_left_pin.Read() == GpioPinValue.High)
-                    turn_act++;
-                actual.setPhi(turn_act);
-                turn_ink2_pressed = false;
+                if (phi_right_pin.Read() == GpioPinValue.High)
+                    phi_act--;
+                else if (phi_left_pin.Read() == GpioPinValue.High)
+                    phi_act++;
+                actual.setPhi(phi_act);
+                phi_ink2_pressed = false;
             }
         }
 
-        private void turn_ink2_pin_ValueChanged(GpioPin sender, GpioPinValueChangedEventArgs e)
+        private void phi_ink2_pin_ValueChanged(GpioPin sender, GpioPinValueChangedEventArgs e)
         {
-            if (turn_ink2_pin.Read() == GpioPinValue.High)
-                turn_ink2_pressed = true;
+            if (phi_ink2_pin.Read() == GpioPinValue.High)
+                phi_ink2_pressed = true;
         }
 
-        private void hor_step_pin_ValueChanged(GpioPin sender, GpioPinValueChangedEventArgs e)
+        private void p_step_pin_ValueChanged(GpioPin sender, GpioPinValueChangedEventArgs e)
         {
-            if (hor_step_pin.Read() == GpioPinValue.High)
+            if (p_step_pin.Read() == GpioPinValue.High)
             {
-                if (hor_fwd_pin.Read() == GpioPinValue.High)
+                if (p_fwd_pin.Read() == GpioPinValue.High)
                 {
-                    hor_act++;
+                    p_act++;
                 }
-                else if (hor_back_pin.Read() == GpioPinValue.High)
+                else if (p_back_pin.Read() == GpioPinValue.High)
                 {
-                    hor_act--;
+                    p_act--;
                 }
-                actual.setP(hor_act);
+                actual.setP(p_act);
             }
         }
 
@@ -464,28 +433,28 @@ namespace Bachelorarbeit
 
         private void Timer_Tick(Object sender, Object args)
         {
-            if (vert_cal_pin.Read() == GpioPinValue.High)
+            if (z_cal_pin.Read() == GpioPinValue.High)
             {
                 emergencyStop = true;
                 calibrationFinished = false;
-                StopVert();
-                Null_Vert();
+                StopZ();
+                Null_Z();
             }
 
-            if (turn_cal_pin.Read() == GpioPinValue.High)
+            if (phi_cal_pin.Read() == GpioPinValue.High)
             {
                 emergencyStop = true;
                 calibrationFinished = false;
-                StopTurn();
-                Null_Turn();
+                StopPhi();
+                Null_Phi();
             }
 
-            if (hor_cal_pin.Read() == GpioPinValue.High)
+            if (p_cal_pin.Read() == GpioPinValue.High)
             {
                 emergencyStop = true;
                 calibrationFinished = false;
-                StopHor();
-                Null_Hor();
+                StopP();
+                Null_P();
             }
 
             if (grip_cal_pin.Read() == GpioPinValue.High)
@@ -504,12 +473,12 @@ namespace Bachelorarbeit
                 {
                     try
                     {
-                        if (vert_null == false)// && ((vert_down_pin.Read() == GpioPinValue.Low) || (vert_up_pin.Read() == GpioPinValue.Low)))
-                            CheckPositionVert();
-                        if (turn_null == false)// && ((turn_left_pin.Read() == GpioPinValue.Low) || (turn_right_pin.Read() == GpioPinValue.Low)))
-                            CheckPositionTurn();
-                        if (hor_null == false)// && ((hor_fwd_pin.Read() == GpioPinValue.Low) || (hor_back_pin.Read() == GpioPinValue.Low)))
-                            CheckPositionHor();
+                        if (z_null == false)// && ((vert_down_pin.Read() == GpioPinValue.Low) || (vert_up_pin.Read() == GpioPinValue.Low)))
+                            CheckPositionZ();
+                        if (phi_null == false)// && ((turn_left_pin.Read() == GpioPinValue.Low) || (turn_right_pin.Read() == GpioPinValue.Low)))
+                            CheckPositionPhi();
+                        if (p_null == false)// && ((hor_fwd_pin.Read() == GpioPinValue.Low) || (hor_back_pin.Read() == GpioPinValue.Low)))
+                            CheckPositionP();
                         if (grip_null == false)// && ((grip_open_pin.Read() == GpioPinValue.Low) || (grip_close_pin.Read() == GpioPinValue.Low)))
                             CheckPositionGrip();
                     }
@@ -625,7 +594,7 @@ namespace Bachelorarbeit
 
         }
 
-        private void CheckPositionVert()
+        private void CheckPositionZ()
         {
             //if (vert_act <= vert_soll - def.tube || vert_act <= 0)
             //    GoDown();
@@ -635,7 +604,7 @@ namespace Bachelorarbeit
             //    StopVert();
             if (actual.getZ() >= def.Z_MAX - def.TUBE)
             {
-                StopVert();
+                StopZ();
                 setpoint.setZ(actual.getZ());
             }
             if (actual.getZ() <= setpoint.getZ() - def.TUBE || actual.getZ() <= 0)
@@ -649,43 +618,43 @@ namespace Bachelorarbeit
                 return;
             }
             else if (actual.getZ() < setpoint.getZ() + def.TUBE && actual.getZ() > setpoint.getZ() - def.TUBE)
-                StopVert();
+                StopZ();
             
             
         }
 
-        private void CheckPositionTurn()
+        private void CheckPositionPhi()
         {
             if (actual.getPhi() <= setpoint.getPhi() - def.TUBE || actual.getPhi() <= 0)
                 TurnLeft();
             else if (actual.getPhi() >= setpoint.getPhi() + def.TUBE || actual.getPhi() >= def.PHI_MAX)
                 TurnRight();
             else if (actual.getPhi() < setpoint.getPhi() + def.TUBE && actual.getPhi() > setpoint.getPhi() - def.TUBE)
-                StopTurn();
+                StopPhi();
             else if (actual.getPhi() >= def.PHI_MAX - def.TUBE)
             {
-                StopTurn();
+                StopPhi();
                 setpoint.setPhi(actual.getPhi());
             }
             else
-                StopTurn();
+                StopPhi();
         }
 
-        private void CheckPositionHor()
+        private void CheckPositionP()
         {
             if (actual.getP() <= setpoint.getP() - def.TUBE || actual.getP() <= 0)
                 GoFwd();
             else if (actual.getP() >= setpoint.getP() + def.TUBE || actual.getP() >= def.P_MAX)
                 GoBack();
             else if (actual.getP() < setpoint.getP() + def.TUBE && actual.getP() > setpoint.getP() - def.TUBE)
-                StopHor();
+                StopP();
             else if (actual.getP() >= def.P_MAX - def.TUBE)
             {
-                StopHor();
+                StopP();
                 setpoint.setP(actual.getP());
             }
             else
-                StopHor();
+                StopP();
         }
 
         private void CheckPositionGrip()
@@ -708,42 +677,42 @@ namespace Bachelorarbeit
         private void CheckMaximumBorders()
         {
             if (actual.getP() >= def.P_MAX - def.TUBE)
-                StopHor();
+                StopP();
             if (actual.getPhi() >= def.PHI_MAX - def.TUBE)
-                StopTurn();
+                StopPhi();
             if (actual.getZ() >= def.Z_MAX - def.TUBE)
-                StopVert();
+                StopZ();
             if (grip_act >= def.GRIP_MAX - def.TUBE)
                 StopGrip();
         }
 
         private void StopAll()
         {
-            StopVert();
-            StopHor();
-            StopTurn();
+            StopZ();
+            StopP();
+            StopPhi();
             StopGrip();
         }
 
-        private void StopVert()
+        private void StopZ()
         {
-            PinLow(vert_enable_pin);
-            PinLow(vert_down_pin);
-            PinLow(vert_up_pin);
+            PinLow(z_enable_pin);
+            PinLow(z_down_pin);
+            PinLow(z_up_pin);
         }
 
-        private void StopTurn()
+        private void StopPhi()
         {
-            PinLow(turn_enable_pin);
-            PinLow(turn_left_pin);
-            PinLow(turn_right_pin);
+            PinLow(phi_enable_pin);
+            PinLow(phi_left_pin);
+            PinLow(phi_right_pin);
         }
 
-        private void StopHor()
+        private void StopP()
         {
-            PinLow(hor_enable_pin);
-            PinLow(hor_fwd_pin);
-            PinLow(hor_back_pin);
+            PinLow(p_enable_pin);
+            PinLow(p_fwd_pin);
+            PinLow(p_back_pin);
         }
 
         private void StopGrip()
@@ -755,44 +724,44 @@ namespace Bachelorarbeit
 
         private void GoUp()
         {
-            PinHigh(vert_enable_pin);
-            PinHigh(vert_up_pin);
-            PinLow(vert_down_pin);
+            PinHigh(z_enable_pin);
+            PinHigh(z_up_pin);
+            PinLow(z_down_pin);
         }
 
         private void GoDown()
         {
-            PinHigh(vert_enable_pin);
-            PinHigh(vert_down_pin);
-            PinLow(vert_up_pin);
+            PinHigh(z_enable_pin);
+            PinHigh(z_down_pin);
+            PinLow(z_up_pin);
         }
 
         private void TurnRight()
         {
-            PinHigh(turn_enable_pin);
-            PinHigh(turn_right_pin);
-            PinLow(turn_left_pin);
+            PinHigh(phi_enable_pin);
+            PinHigh(phi_right_pin);
+            PinLow(phi_left_pin);
         }
 
         private void TurnLeft()
         {
-            PinHigh(turn_enable_pin);
-            PinHigh(turn_left_pin);
-            PinLow(turn_right_pin);
+            PinHigh(phi_enable_pin);
+            PinHigh(phi_left_pin);
+            PinLow(phi_right_pin);
         }
 
         private void GoFwd()
         {
-            PinHigh(hor_enable_pin);
-            PinHigh(hor_fwd_pin);
-            PinLow(hor_back_pin);
+            PinHigh(p_enable_pin);
+            PinHigh(p_fwd_pin);
+            PinLow(p_back_pin);
         }
 
         private void GoBack()
         {
-            PinHigh(hor_enable_pin);
-            PinLow(hor_fwd_pin);
-            PinHigh(hor_back_pin);
+            PinHigh(p_enable_pin);
+            PinLow(p_fwd_pin);
+            PinHigh(p_back_pin);
         }
 
         private void OpenGrip()
@@ -813,24 +782,24 @@ namespace Bachelorarbeit
         {
             inCalibration = true;
             calibrationFinished = false;
-            Calibrate_Hor();
+            Calibrate_P();
         }
 
-        private void Calibrate_Hor()
+        private void Calibrate_P()
         {
             inCalibration = true;
             actual.setP(def.P_MAX);
             GoBack();
         }
 
-        private void Calibrate_Vert()
+        private void Calibrate_Z()
         {
             inCalibration = true;
             actual.setZ(def.Z_MAX);
             GoUp();
         }
 
-        private void Calibrate_Turn()
+        private void Calibrate_Phi()
         {
             inCalibration = true;
             actual.setPhi(def.PHI_MAX);
@@ -844,21 +813,21 @@ namespace Bachelorarbeit
             OpenGrip();
         }
 
-        private void Null_Vert()
+        private void Null_Z()
         {
-            vert_null = true;
+            z_null = true;
             GoDown();
         }
 
-        private void Null_Turn()
+        private void Null_Phi()
         {
-            turn_null = true;
+            phi_null = true;
             TurnLeft();
         }
 
-        private void Null_Hor()
+        private void Null_P()
         {
-            hor_null = true;
+            p_null = true;
             GoFwd();
         }
 
