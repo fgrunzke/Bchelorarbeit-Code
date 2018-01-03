@@ -82,7 +82,6 @@ namespace Bachelorarbeit
         private bool phi_null = true;
         private bool p_null = true;
         private bool grip_null = true;
-        private bool emergencyStop = false;
         private bool wasPressed = false;
 
         private int gui_counter = 0;
@@ -207,271 +206,318 @@ namespace Bachelorarbeit
 
         private void z_cal_pin_ValueChanged(GpioPin sender, GpioPinValueChangedEventArgs e)
         {
-            if (z_cal_pin.Read() == GpioPinValue.High)
+            try
             {
-                StopZ();
+                if (z_cal_pin.Read() == GpioPinValue.High)
+                {
+                    StopZ();
 
-                if (inCalibration == true)
-                {
-                    //vert_cal = false;
-                    //if(vert_cal == turn_cal == false)
-                    inCalibration = false;
-                    Null_Z();
+                    if (inCalibration == true)
+                    {
+                        inCalibration = false;
+                        Null_Z();
+                    }
+                    else
+                        GoDown();
                 }
-                else
+
+                if (z_cal_pin.Read() == GpioPinValue.Low)
                 {
-                    Calibrate_Z();
+                    StopZ();
+                    z_act = 0;
+                    if (z_null == true)
+                    {
+                        z_null = false;
+                        calibrationFinished = true;
+                    }
                 }
             }
-
-            if (z_cal_pin.Read() == GpioPinValue.Low)
+            catch
             {
-                StopZ();
-                z_act = 0;
-                emergencyStop = false;
-                if (z_null == true)
-                {
-
-                    z_null = false;
-                    calibrationFinished = true;
-                    
-                }
-                else
-                {
-                    Calibrate();
-                }
+                StopAll();
+                throw;
             }
+            
         }
 
         private void phi_cal_pin_ValueChanged(GpioPin sender, GpioPinValueChangedEventArgs e)
         {
-            if (phi_cal_pin.Read() == GpioPinValue.High)
+            try
             {
-                StopPhi();
+                if (phi_cal_pin.Read() == GpioPinValue.High)
+                {
+                    StopPhi();
 
-                if (inCalibration == false)
-                {
-                    inCalibration = false;
-                    Null_Phi();
+                    if (inCalibration == false)
+                    {
+                        inCalibration = false;
+                        Null_Phi();
+                    }
+                    else
+                        TurnLeft();
+                
                 }
-                else
+
+                if (phi_cal_pin.Read() == GpioPinValue.Low)
                 {
-                    Calibrate_Phi();
+                    StopPhi();
+                    phi_act = 0;
+                    if (phi_null == true)
+                    {
+                        phi_null = false;
+                        Calibrate_Z();
+                    }
                 }
             }
-
-            if (phi_cal_pin.Read() == GpioPinValue.Low)
+            catch
             {
-                StopPhi();
-                phi_act = 0;
-                emergencyStop = false;
-                if (phi_null == true)
-                {
-                    phi_null = false;
-                    Calibrate_Z();
-                }
-                else
-                {
-                    Calibrate();
-                }
+                StopAll();
+                throw;
             }
+            
         }
 
         private void p_cal_pin_ValueChanged(GpioPin sender, GpioPinValueChangedEventArgs e)
         {
-            if (p_cal_pin.Read() == GpioPinValue.High)
+            try
             {
-                StopP();
+                if (p_cal_pin.Read() == GpioPinValue.High)
+                {
+                    StopP();
 
-                if (inCalibration == false)
-                {
-                    inCalibration = false;
-                    Null_P();
+                    if (inCalibration == false)
+                    {
+                        inCalibration = false;
+                        Null_P();
+                    }
+                    else
+                    {
+                        GoFwd();
+                    }
                 }
-                else
+
+                if (p_cal_pin.Read() == GpioPinValue.Low)
                 {
-                    Calibrate_P();
+                    StopP();
+                    p_act = 0;
+                    if (p_null == true)
+                    {
+                        p_null = false;
+                        Calibrate_Grip();
+                    }
                 }
             }
-
-            if (p_cal_pin.Read() == GpioPinValue.Low)
+            catch
             {
-                StopP();
-                p_act = 0;
-                emergencyStop = false;
-                if (p_null == true)
-                {
-                    p_null = false;
-                    Calibrate_Grip();
-                }
-                else
-                {
-                    Calibrate();
-                }
+                StopAll();
+                throw;
             }
+            
         }
 
         private void grip_cal_pin_ValueChanged(GpioPin sender, GpioPinValueChangedEventArgs e)
         {
-            if (grip_cal_pin.Read() == GpioPinValue.High)
+            try
             {
-                StopGrip();
+                if (grip_cal_pin.Read() == GpioPinValue.High)
+                {
+                    StopGrip();
 
-                if (inCalibration == false)
-                {
-                    inCalibration = false;
-                    Null_Grip();
+                    if (inCalibration == false)
+                    {
+                        inCalibration = false;
+                        Null_Grip();
+                    }
+                    else
+                    {
+                        CloseGrip();
+                    }
                 }
-                else
+
+                if (grip_cal_pin.Read() == GpioPinValue.Low)
                 {
-                    Calibrate_Grip();
+                    StopGrip();
+                    grip_act = 0;
+                    if (grip_null == true)
+                    {
+
+                        grip_null = false;
+                        Calibrate_Phi();
+                    }
                 }
             }
-
-            if (grip_cal_pin.Read() == GpioPinValue.Low)
+            catch
             {
-                StopGrip();
-                grip_act = 0;
-                emergencyStop = false;
-                if (grip_null == true)
-                {
-
-                    grip_null = false;
-                    Calibrate_Phi();
-                }
-                else
-                {
-                    Calibrate();
-                }
+                StopAll();
+                throw;
             }
+            
         }
 
         private void z_ink1_pin_ValueChanged(GpioPin sender, GpioPinValueChangedEventArgs e)
         {
-            if (z_ink1_pin.Read() == GpioPinValue.High)
+            try
             {
-                //if (vert_ink2_pressed == true)
-                //{
-                //    if (vert_ink2_pin.Read() == GpioPinValue.High)
-                //        vert_act--;
-                //    else
-                //        vert_act++;
-                //    actual.setZ(vert_act);
-                //}
-                if (z_up_pin.Read() == GpioPinValue.High)
-                    z_act--;
-                else if (z_down_pin.Read() == GpioPinValue.High)
-                    z_act++;
-                actual.setZ(z_act);
-                z_ink2_pressed = false;
+                if (z_ink1_pin.Read() == GpioPinValue.High)
+                {
+                    //if (z_ink2_pressed == true)
+                    //{
+                    //    if (z_ink2_pin.Read() == GpioPinValue.High)
+                    //        z_act--;
+                    //    else
+                    //        z_act++;
+                    //    actual.setZ(z_act);
+                    //}
+                    if (z_up_pin.Read() == GpioPinValue.High)
+                        z_act--;
+                    else if (z_down_pin.Read() == GpioPinValue.High)
+                        z_act++;
+                    actual.setZ(z_act);
+                    z_ink2_pressed = false;
+                }
             }
+            catch
+            {
+                StopAll();
+                throw;
+            }
+            
         }
 
         private void z_ink2_pin_ValueChanged(GpioPin sender, GpioPinValueChangedEventArgs e)
         {
-            if (z_ink2_pin.Read() == GpioPinValue.High)
-                z_ink2_pressed = true;
+            try
+            {
+                if (z_ink2_pin.Read() == GpioPinValue.High)
+                    z_ink2_pressed = true;
+            }
+            catch
+            {
+                StopAll();
+                throw;
+            }
+            
         }
 
         private void phi_ink1_pin_ValueChanged(GpioPin sender, GpioPinValueChangedEventArgs e)
         {
-            if (phi_ink1_pin.Read() == GpioPinValue.High)
+            try
             {
-                //if (turn_ink2_pressed == true)
-                //{
-                //    if (turn_ink2_pin.Read() == GpioPinValue.High)
-                //        turn_act--;
-                //    else
-                //        turn_act++;
-                //    actual.setPhi(turn_act);
-                //}
-                if (phi_right_pin.Read() == GpioPinValue.High)
-                    phi_act--;
-                else if (phi_left_pin.Read() == GpioPinValue.High)
-                    phi_act++;
-                actual.setPhi(phi_act);
-                phi_ink2_pressed = false;
+                if (phi_ink1_pin.Read() == GpioPinValue.High)
+                {
+                    //if (phi_ink2_pressed == true)
+                    //{
+                    //    if (phi_ink2_pin.Read() == GpioPinValue.High)
+                    //        phi_act--;
+                    //    else
+                    //        phi_act++;
+                    //    actual.setPhi(phi_act);
+                    //}
+                    if (phi_right_pin.Read() == GpioPinValue.High)
+                        phi_act--;
+                    else if (phi_left_pin.Read() == GpioPinValue.High)
+                        phi_act++;
+                    actual.setPhi(phi_act);
+                    phi_ink2_pressed = false;
+                }
             }
+            catch
+            {
+                StopAll();
+                throw;
+            }
+            
         }
 
         private void phi_ink2_pin_ValueChanged(GpioPin sender, GpioPinValueChangedEventArgs e)
         {
-            if (phi_ink2_pin.Read() == GpioPinValue.High)
-                phi_ink2_pressed = true;
+            try
+            {
+                if (phi_ink2_pin.Read() == GpioPinValue.High)
+                    phi_ink2_pressed = true;
+            }
+            catch
+            {
+                StopAll();
+                throw;
+            }
+            
         }
 
         private void p_step_pin_ValueChanged(GpioPin sender, GpioPinValueChangedEventArgs e)
         {
-            if (p_step_pin.Read() == GpioPinValue.High)
+            try
             {
-                if (p_fwd_pin.Read() == GpioPinValue.High)
-                {
-                    p_act++;
-                }
-                else if (p_back_pin.Read() == GpioPinValue.High)
-                {
-                    p_act--;
-                }
-                actual.setP(p_act);
+                if (p_step_pin.Read() == GpioPinValue.High)
+                    {
+                        if (p_fwd_pin.Read() == GpioPinValue.High)
+                            p_act++;
+                        else if (p_back_pin.Read() == GpioPinValue.High)
+                            p_act--;
+                        actual.setP(p_act);
+                    }
             }
+            catch
+            {
+                StopAll();
+                throw;
+            }
+            
         }
 
         private void grip_step_pin_ValueChanged(GpioPin sender, GpioPinValueChangedEventArgs e)
         {
-            if (grip_step_pin.Read() == GpioPinValue.High)
+            try
             {
-                if (grip_close_pin.Read() == GpioPinValue.High)
-                {
-                    grip_act++;
-                }
-                else if (grip_open_pin.Read() == GpioPinValue.Low)
-                {
-                    grip_act--;
-                }
+                if (grip_step_pin.Read() == GpioPinValue.High)
+                    {
+                        if (grip_close_pin.Read() == GpioPinValue.High)
+                            grip_act++;
+                        else if (grip_open_pin.Read() == GpioPinValue.Low)
+                            grip_act--;
+                    }
             }
+            catch
+            {
+                StopAll();
+                throw;
+            }
+            
         }
 
         private void Timer_Tick(Object sender, Object args)
         {
-            if (z_cal_pin.Read() == GpioPinValue.High)
+            try
             {
-                emergencyStop = true;
-                calibrationFinished = false;
-                StopZ();
-                Null_Z();
-            }
-
-            if (phi_cal_pin.Read() == GpioPinValue.High)
-            {
-                emergencyStop = true;
-                calibrationFinished = false;
-                StopPhi();
-                Null_Phi();
-            }
-
-            if (p_cal_pin.Read() == GpioPinValue.High)
-            {
-                emergencyStop = true;
-                calibrationFinished = false;
-                StopP();
-                Null_P();
-            }
-
-            if (grip_cal_pin.Read() == GpioPinValue.High)
-            {
-                emergencyStop = true;
-                calibrationFinished = false;
-                StopGrip();
-                Null_Grip();
-            }
-
-            if (calibrationFinished == true && emergencyStop == false)
-            {
-                CheckMaximumBorders();
-
-                if (FreeMovement.IsChecked == false)
+                if (z_cal_pin.Read() == GpioPinValue.High)
                 {
-                    try
+                    StopZ();
+                    GoDown();
+                }
+
+                if (phi_cal_pin.Read() == GpioPinValue.High)
+                {
+                    StopPhi();
+                    TurnLeft();
+                }
+
+                if (p_cal_pin.Read() == GpioPinValue.High)
+                {
+                    StopP();
+                    GoFwd();
+                }
+
+                if (grip_cal_pin.Read() == GpioPinValue.High)
+                {
+                    StopGrip();
+                    CloseGrip();
+                }
+
+                if (calibrationFinished == true)
+                {
+                    CheckMaximumBorders();
+
+                    if (FreeMovement.IsChecked == false)
                     {
                         if (z_null == false)// && ((vert_down_pin.Read() == GpioPinValue.Low) || (vert_up_pin.Read() == GpioPinValue.Low)))
                             CheckPositionZ();
@@ -481,15 +527,15 @@ namespace Bachelorarbeit
                             CheckPositionP();
                         if (grip_null == false)// && ((grip_open_pin.Read() == GpioPinValue.Low) || (grip_close_pin.Read() == GpioPinValue.Low)))
                             CheckPositionGrip();
-                    }
-                    catch
-                    {
-                        StopAll();
-                        throw;
-                    }
-                    
+                     }
                 }
             }
+            catch
+            {
+                StopAll();
+                throw;
+            }
+            
 
             
 
@@ -497,24 +543,33 @@ namespace Bachelorarbeit
 
         private void TimerGUI_Tick(Object sender, Object args)
         {
-            if (calibrationFinished == true && emergencyStop == false)
+            try
             {
-                CheckGUI();
-            }
-            gui_counter++;
-            if (gui_counter >= 10)
-            {
-                VertPos.Text = actual.printZ();
-                HorPos.Text = actual.printP();
-                TurnPos.Text = actual.printPhi();
-                GripPos.Text = "" + grip_act;
+                if (calibrationFinished == true)
+                {
+                    CheckGUI();
+                }
+                gui_counter++;
+                if (gui_counter >= 10)
+                {
+                    VertPos.Text = actual.printZ();
+                    HorPos.Text = actual.printP();
+                    TurnPos.Text = actual.printPhi();
+                    GripPos.Text = "" + grip_act;
 
-                VertTarPos.Text = setpoint.printZ();
-                HorTarPos.Text = setpoint.printP();
-                TurnTarPos.Text = setpoint.printPhi();
-                GripTarPos.Text = "" + grip_soll;
-                gui_counter = 0;
+                    VertTarPos.Text = setpoint.printZ();
+                    HorTarPos.Text = setpoint.printP();
+                    TurnTarPos.Text = setpoint.printPhi();
+                    GripTarPos.Text = "" + grip_soll;
+                    gui_counter = 0;
+                }
             }
+            catch
+            {
+                StopAll();
+                throw;
+            }
+            
             
         }
 
@@ -596,12 +651,6 @@ namespace Bachelorarbeit
 
         private void CheckPositionZ()
         {
-            //if (vert_act <= vert_soll - def.tube || vert_act <= 0)
-            //    GoDown();
-            //else if (vert_act >= vert_soll + def.tube || vert_act >= def.VERT_MAX)
-            //    GoUp();
-            //else if (vert_act < vert_soll + def.tube && vert_act > vert_soll - def.tube)
-            //    StopVert();
             if (actual.getZ() >= def.Z_MAX - def.TUBE)
             {
                 StopZ();
@@ -676,13 +725,13 @@ namespace Bachelorarbeit
 
         private void CheckMaximumBorders()
         {
-            if (actual.getP() >= def.P_MAX - def.TUBE)
+            if (actual.getP() >= def.P_MAX - def.TUBE && p_fwd_pin.Read() == GpioPinValue.High)
                 StopP();
-            if (actual.getPhi() >= def.PHI_MAX - def.TUBE)
+            if (actual.getPhi() >= def.PHI_MAX - def.TUBE && phi_left_pin.Read() == GpioPinValue.High)
                 StopPhi();
-            if (actual.getZ() >= def.Z_MAX - def.TUBE)
+            if (actual.getZ() >= def.Z_MAX - def.TUBE && z_down_pin.Read() == GpioPinValue.High)
                 StopZ();
-            if (grip_act >= def.GRIP_MAX - def.TUBE)
+            if (grip_act >= def.GRIP_MAX - def.TUBE && grip_close_pin.Read() == GpioPinValue.High)
                 StopGrip();
         }
 
