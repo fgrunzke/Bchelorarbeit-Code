@@ -60,20 +60,26 @@ namespace Bachelorarbeit
         private GpioPin z_cal_pin;
         private GpioPin phi_cal_pin;
         private GpioPin grip_cal_pin;
-        
-        private DispatcherTimer timer = new DispatcherTimer();
-        private DispatcherTimer timerGUI = new DispatcherTimer();
 
+        //Timer für Positionsvegleich und Auswertung/Aktalisierung der GUI
+        private DispatcherTimer timer = new DispatcherTimer();
+        private DispatcherTimer timerGUI_check = new DispatcherTimer();
+        private DispatcherTimer timerGUI_actualize = new DispatcherTimer();
+
+        //aktuelle Werte für die Position
         private int p_act = def.P_MAX;
         private int z_act = def.Z_MAX;
         private int phi_act = def.PHI_MAX;
         private int grip_act = def.GRIP_MAX;
 
-        private int grip_soll = def.GRIP_SOLL;
-
+        //soll und ist Werte als Punkt in Zylinderkoordniaten
         private Point setpoint = new Point(def.P_SOLL, def.PHI_SOLL, def.Z_SOLL);
         private Point actual = new Point();
 
+        //Vorgabe für die Positon des Greifers, da nich im Punkt mit berücksichtigt
+        private int grip_soll = def.GRIP_SOLL;
+
+        //verschiede Kontrollvariablen für Programmablaufplanung
         private bool inCalibration = false;
         private bool calibrationFinished = false;
         private bool z_ink2_pressed = false;
@@ -90,15 +96,18 @@ namespace Bachelorarbeit
         {
             InitializeComponent();
             InitGPIO();
-            timer.Interval = TimeSpan.FromMilliseconds(50);
+
+            timer.Interval = TimeSpan.FromMilliseconds(def.CHECKTIME_POSITION);
             timer.Tick += Timer_Tick;
-            if (z_cal_pin != null)
-            {
-                timer.Start();
-            }
-            timerGUI.Interval = TimeSpan.FromMilliseconds(50);
-            timerGUI.Tick += TimerGUI_Tick;
-            timerGUI.Start();
+            timer.Start();
+
+            timerGUI_check.Interval = TimeSpan.FromMilliseconds(def.CHECKTIME_GUI);
+            timerGUI_check.Tick += TimerGUI_check_Tick;
+            timerGUI_check.Start();
+
+            timerGUI_actualize.Interval = TimeSpan.FromMilliseconds(def.ACTUALIZETIME_GUI);
+            timerGUI_actualize.Tick += TimerGUI_actualize_Tick;
+            timerGUI_actualize.Start();
 
             Calibrate();
 
@@ -535,33 +544,15 @@ namespace Bachelorarbeit
                 StopAll();
                 throw;
             }
-            
-
-            
-
         }
 
-        private void TimerGUI_Tick(Object sender, Object args)
+        private void TimerGUI_check_Tick(Object sender, Object args)
         {
             try
             {
                 if (calibrationFinished == true)
                 {
                     CheckGUI();
-                }
-                gui_counter++;
-                if (gui_counter >= 10)
-                {
-                    VertPos.Text = actual.printZ();
-                    HorPos.Text = actual.printP();
-                    TurnPos.Text = actual.printPhi();
-                    GripPos.Text = "" + grip_act;
-
-                    VertTarPos.Text = setpoint.printZ();
-                    HorTarPos.Text = setpoint.printP();
-                    TurnTarPos.Text = setpoint.printPhi();
-                    GripTarPos.Text = "" + grip_soll;
-                    gui_counter = 0;
                 }
             }
             catch
@@ -571,6 +562,29 @@ namespace Bachelorarbeit
             }
             
             
+        }
+
+        private void TimerGUI_actualize_Tick(Object sender, Object args)
+        {
+            try
+            {
+                VertPos.Text = actual.printZ();
+                HorPos.Text = actual.printP();
+                TurnPos.Text = actual.printPhi();
+                GripPos.Text = "" + grip_act;
+
+                VertTarPos.Text = setpoint.printZ();
+                HorTarPos.Text = setpoint.printP();
+                TurnTarPos.Text = setpoint.printPhi();
+                GripTarPos.Text = "" + grip_soll;
+            }
+            catch
+            {
+                StopAll();
+                throw;
+            }
+
+
         }
 
         private void CheckGUI()
@@ -895,5 +909,6 @@ namespace Bachelorarbeit
         {
             pin.Write(GpioPinValue.High);
         }
+
     }
 }

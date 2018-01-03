@@ -24,6 +24,9 @@ namespace Bachelorarbeit
         public const double PHI_FACT = PHI_VALUE / PHI_MAX;
 
         public const double input_timeout = 0.1;
+        public const int CHECKTIME_POSITION = 50;
+        public const int CHECKTIME_GUI = 100;
+        public const int ACTUALIZETIME_GUI = 200;
 
         //Ausgangs GPIOs
         //Horizontaler Motor
