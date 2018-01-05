@@ -8,11 +8,12 @@ namespace Bachelorarbeit
         public const int Z_SOLL = 1000;
         public const int PHI_SOLL = 500;
         public const int GRIP_SOLL = 25;
-        public const int TUBE = 20;
+        public const int TUBE = 15;
+        public const int OVERSHOOT = 20;
 
         public const int P_MAX = 800;
         public const int Z_MAX = 2000;
-        public const int PHI_MAX = 2200;
+        public const int PHI_MAX = 2150;
         public const int GRIP_MAX = 40;
 
         public const double P_VALUE = 70;
@@ -24,9 +25,17 @@ namespace Bachelorarbeit
         public const double PHI_FACT = PHI_VALUE / PHI_MAX;
 
         public const double input_timeout = 0.1;
-        public const int CHECKTIME_POSITION = 50;
+        public const int CHECKTIME_POSITION = 20;
         public const int CHECKTIME_GUI = 100;
         public const int ACTUALIZETIME_GUI = 200;
+
+        //Standerdhindernis
+        public const int P1 = 0;
+        public const int P2 = P_MAX;
+        public const int Z1 = Z_MAX - 1250;
+        public const int Z2 = Z_MAX;
+        public const int Phi1 = 600;
+        public const int Phi2 = 650;
 
         //Ausgangs GPIOs
         //Horizontaler Motor

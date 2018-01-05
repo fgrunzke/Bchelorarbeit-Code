@@ -75,6 +75,7 @@ namespace Bachelorarbeit
         //soll und ist Werte als Punkt in Zylinderkoordniaten
         private Point setpoint = new Point(def.P_SOLL, def.PHI_SOLL, def.Z_SOLL);
         private Point actual = new Point();
+        private Point target = new Point();
 
         //Vorgabe für die Positon des Greifers, da nich im Punkt mit berücksichtigt
         private int grip_soll = def.GRIP_SOLL;
@@ -90,7 +91,8 @@ namespace Bachelorarbeit
         private bool grip_null = true;
         private bool wasPressed = false;
 
-        private int gui_counter = 0;
+        private Queue<Point> path = new Queue<Point>();
+        private Obstacle obst = new Obstacle(def.P1, def.P2, def.Z1, def.Z2, def.Phi1, def.Phi2);
 
         public MainPage()
         {
@@ -536,7 +538,14 @@ namespace Bachelorarbeit
                             CheckPositionP();
                         if (grip_null == false)// && ((grip_open_pin.Read() == GpioPinValue.Low) || (grip_close_pin.Read() == GpioPinValue.Low)))
                             CheckPositionGrip();
-                     }
+                        if (actual.getP() <= setpoint.getP() + def.OVERSHOOT && actual.getP() <= setpoint.getP() - def.OVERSHOOT &&
+                            actual.getPhi() <= setpoint.getPhi() + def.OVERSHOOT && actual.getPhi() <= setpoint.getPhi() - def.OVERSHOOT &&
+                            actual.getZ() <= setpoint.getZ() + def.OVERSHOOT && actual.getZ() <= setpoint.getZ() - def.OVERSHOOT &&
+                            path.Any())
+                        {
+                            setpoint = path.Dequeue();
+                        }
+                    }
                 }
             }
             catch
@@ -649,16 +658,24 @@ namespace Bachelorarbeit
                 int phi = 0;
                 int.TryParse(TurnIn.Text, out phi);
 
-                setpoint.setP(p);
-                setpoint.setZ(z);
-                setpoint.setPhi(phi);
+                target.setP(p);
+                target.setZ(z);
+                target.setPhi(phi);
+
+                path = Calculatepath(actual, target);
             }
             else if (random.IsPressed == true)
             {
                 Random rand = new Random();
-                setpoint.setZ(rand.Next(0, def.Z_MAX));
-                setpoint.setPhi(rand.Next(0, def.PHI_MAX));
-                setpoint.setP(rand.Next(0, def.P_MAX));
+                target.setZ(rand.Next(0, def.Z_MAX));
+                target.setPhi(rand.Next(0, def.PHI_MAX));
+                target.setP(rand.Next(0, def.P_MAX));
+
+                HorIn.Text = setpoint.getP().ToString("0000");
+                VertIn.Text = setpoint.getZ().ToString("0000");
+                TurnIn.Text = setpoint.getPhi().ToString("0000");
+
+                path = Calculatepath(actual, target);
             }
 
         }
@@ -909,6 +926,126 @@ namespace Bachelorarbeit
         {
             pin.Write(GpioPinValue.High);
         }
+
+        private Queue<Point> Calculatepath(Point s, Point t)
+        {
+            Queue<Point> path = new Queue<Point>();
+            Point start = s;
+            Point target = t;
+            Point next = s;
+
+            if (IsPonObstacle(s, t) == false && IsZonObstacle(s, t) == false && IsPhionObstacle(s, t) == false)
+            {
+                path.Enqueue(target);
+            }
+            else
+            {
+                Point helper = new Point(t.getP(), obst.getPhi1() - def.TUBE - def.OVERSHOOT, s.getZ());
+                path.Enqueue(helper);
+                helper.setPhi(obst.getPhi2());
+                path.Enqueue(helper);
+                path.Enqueue(target);
+            }
+            setpoint = path.Dequeue();
+            return path;
+        }
+
+        private bool IsPonObstacle(Point s, Point t)
+        {
+            int start = getSmaller(s.getP(), t.getP());
+            int target = getBigger(s.getP(), t.getP());
+            
+            if (Difference(start, target) == 0) { return false; }
+
+            List<int> p = new List<int>();
+
+            for (int i = start; i <= target; i++)
+            {
+                p.Add(i);
+            }
+
+            foreach (int i in p)
+            {
+                if (i >= obst.getP1() && i <= obst.getP2())
+                    return true;
+            }
+            
+            return false;
+        }
+
+        private bool IsZonObstacle(Point s, Point t)
+        {
+            int start = getSmaller(s.getZ(), t.getZ());
+            int target = getBigger(s.getZ(), t.getZ());
+
+            if (Difference(start, target) == 0) { return false; }
+
+            List<int> z = new List<int>();
+
+            for (int i = start; i <= target; i++)
+            {
+                z.Add(i);
+            }
+
+            foreach (int i in z)
+            {
+                if (i >= obst.getZ1() && i <= obst.getZ2())
+                    return true;
+            }
+
+            return false;
+        }
+
+        private bool IsPhionObstacle(Point s, Point t)
+        {
+            int start = getSmaller(s.getPhi(), t.getPhi());
+            int target = getBigger(s.getPhi(), t.getPhi());
+
+            if (Difference(start, target) == 0) { return false; }
+
+            List<int> phi = new List<int>();
+
+            for (int i = start; i <= target; i++)
+            {
+                phi.Add(i);
+            }
+
+            foreach (int i in phi)
+            {
+                if (i >= obst.getPhi1() && i <= obst.getPhi2())
+                    return true;
+            }
+
+            return false;
+        }
+
+        private int Difference(int s, int t)
+        {
+            int diff = s - t;
+            if (diff < 0)
+            {
+                diff *= -1;
+            }
+            return diff;
+        }
+
+        private int getSmaller(int s, int t)
+        {
+            if (s < t)
+                return s;
+            else
+                return t;
+        }
+
+        private int getBigger(int s, int t)
+        {
+            if (s > t)
+                return s;
+            else 
+                return t;
+        }
+
+        
 
     }
 }
