@@ -15,6 +15,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 
+
 namespace Bachelorarbeit
 {
     public sealed partial class MainPage : Page
@@ -91,7 +92,8 @@ namespace Bachelorarbeit
         private bool grip_null = true;
         private bool wasPressed = false;
 
-        private Queue<Point> path = new Queue<Point>();
+        
+        private List<Point> path = new List<Point>();
         private Obstacle obst = new Obstacle(def.P1, def.P2, def.Z1, def.Z2, def.Phi1, def.Phi2);
 
         public MainPage()
@@ -239,7 +241,7 @@ namespace Bachelorarbeit
                     if (z_null == true)
                     {
                         z_null = false;
-                        calibrationFinished = true;
+                        Calibrate_Phi();
                     }
                 }
             }
@@ -276,7 +278,7 @@ namespace Bachelorarbeit
                     if (phi_null == true)
                     {
                         phi_null = false;
-                        Calibrate_Z();
+                        calibrationFinished = true;
                     }
                 }
             }
@@ -353,7 +355,7 @@ namespace Bachelorarbeit
                     {
 
                         grip_null = false;
-                        Calibrate_Phi();
+                        Calibrate_Z();
                     }
                 }
             }
@@ -538,12 +540,13 @@ namespace Bachelorarbeit
                             CheckPositionP();
                         if (grip_null == false)// && ((grip_open_pin.Read() == GpioPinValue.Low) || (grip_close_pin.Read() == GpioPinValue.Low)))
                             CheckPositionGrip();
-                        if (actual.getP() <= setpoint.getP() + def.OVERSHOOT && actual.getP() <= setpoint.getP() - def.OVERSHOOT &&
-                            actual.getPhi() <= setpoint.getPhi() + def.OVERSHOOT && actual.getPhi() <= setpoint.getPhi() - def.OVERSHOOT &&
-                            actual.getZ() <= setpoint.getZ() + def.OVERSHOOT && actual.getZ() <= setpoint.getZ() - def.OVERSHOOT &&
+                        if (Difference(actual.getP(), setpoint.getP()) <= def.OVERSHOOT && 
+                            Difference(actual.getPhi(), setpoint.getPhi()) <= def.OVERSHOOT &&
+                            Difference(actual.getZ(), setpoint.getZ()) <= def.OVERSHOOT &&
                             path.Any())
                         {
-                            setpoint = path.Dequeue();
+                            setpoint = path.First();
+                            path.RemoveAt(0);
                         }
                     }
                 }
@@ -582,10 +585,12 @@ namespace Bachelorarbeit
                 TurnPos.Text = actual.printPhi();
                 GripPos.Text = "" + grip_act;
 
-                VertTarPos.Text = setpoint.printZ();
-                HorTarPos.Text = setpoint.printP();
-                TurnTarPos.Text = setpoint.printPhi();
+                VertTarPos.Text = target.printZ();
+                HorTarPos.Text = target.printP();
+                TurnTarPos.Text = target.printPhi();
                 GripTarPos.Text = "" + grip_soll;
+
+                Cartesian(actual);
             }
             catch
             {
@@ -671,9 +676,9 @@ namespace Bachelorarbeit
                 target.setPhi(rand.Next(0, def.PHI_MAX));
                 target.setP(rand.Next(0, def.P_MAX));
 
-                HorIn.Text = setpoint.getP().ToString("0000");
-                VertIn.Text = setpoint.getZ().ToString("0000");
-                TurnIn.Text = setpoint.getPhi().ToString("0000");
+                HorIn.Text = target.getP().ToString("0000");
+                VertIn.Text = target.getZ().ToString("0000");
+                TurnIn.Text = target.getPhi().ToString("0000");
 
                 path = Calculatepath(actual, target);
             }
@@ -927,27 +932,52 @@ namespace Bachelorarbeit
             pin.Write(GpioPinValue.High);
         }
 
-        private Queue<Point> Calculatepath(Point s, Point t)
+        private List<Point> Calculatepath(Point s, Point t)
         {
-            Queue<Point> path = new Queue<Point>();
-            Point start = s;
-            Point target = t;
+            List<Point> calcPath = new List<Point>();
             Point next = s;
+            Point next2 = s;
 
-            if (IsPonObstacle(s, t) == false && IsZonObstacle(s, t) == false && IsPhionObstacle(s, t) == false)
-            {
-                path.Enqueue(target);
-            }
+            if (Obstacles.IsChecked == false)
+                calcPath.Add(t);
             else
             {
-                Point helper = new Point(t.getP(), obst.getPhi1() - def.TUBE - def.OVERSHOOT, s.getZ());
-                path.Enqueue(helper);
-                helper.setPhi(obst.getPhi2());
-                path.Enqueue(helper);
-                path.Enqueue(target);
+                if (IsPonObstacle(s, t) == false && IsZonObstacle(s, t) == false && IsPhionObstacle(s, t) == false)
+                {
+                    calcPath.Add(t);
+                }
+                else
+                {
+                    //Point helper = new Point(t.getP(), obst.getPhi1() - def.TUBE - def.OVERSHOOT, s.getZ());
+                    next.setP(t.getP());
+                    if (getBigger(obst.getPhi1(), s.getPhi()) == obst.getPhi1())
+                    {
+                        next.setPhi(obst.getPhi1() - def.OVERSHOOT);
+                        next.setZ(obst.getZ1() - def.OVERSHOOT);
+                        calcPath.Add(next);
+                        next2 = next;
+                        next2.setPhi(obst.getPhi2() + def.OVERSHOOT);
+                        calcPath.Add(next2);
+                    }
+                    else
+                    {
+                        next.setPhi(obst.getPhi2() + def.OVERSHOOT);
+                        next.setZ(obst.getZ1() - def.OVERSHOOT);
+                        calcPath.Add(next);
+                        next2 = next;
+                        next2.setPhi(obst.getPhi1() - def.OVERSHOOT);
+                        calcPath.Add(next2);
+                    }
+                    calcPath.Add(t);
+                    //path.Enqueue(helper);
+                    //helper.setPhi(obst.getPhi2());
+                    //path.Enqueue(helper);
+                    //path.Enqueue(target);
+                }
             }
-            setpoint = path.Dequeue();
-            return path;
+            setpoint = calcPath.First();
+            calcPath.RemoveAt(0);
+            return calcPath;
         }
 
         private bool IsPonObstacle(Point s, Point t)
@@ -1045,7 +1075,18 @@ namespace Bachelorarbeit
                 return t;
         }
 
+        private void Cartesian(Point act)
+        {
+            double phi = (act.getPhi() * def.PHI_FACT * Math.PI) / 180;
+            double x = (act.getP() * Math.Sin(phi));
+            double y = (act.getP() * Math.Cos(phi));
+            CartX.Text = x.ToString("000.0");
+            CartY.Text = y.ToString("000.0");
+            CartZ.Text = act.getZ().ToString("000.0");
+        }
+
         
+
 
     }
 }

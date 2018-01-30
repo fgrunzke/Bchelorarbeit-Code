@@ -61,6 +61,13 @@
                 <TextBox Name="TurnIn" RelativePanel.RightOf="HorIn" RelativePanel.AlignVerticalCenterWith="SetPoint"></TextBox>
                 <Button x:Name="random" Width="150" Height="40" Margin="5" HorizontalAlignment="Center" RelativePanel.Below="SetPoint">zufälliger Punkt</Button>
                 <CheckBox Name="FreeMovement" RelativePanel.Below="random">Freie Bewegung</CheckBox>
+                <CheckBox Name="Obstacles" RelativePanel.Below="random" RelativePanel.RightOf="random">Hindernisse</CheckBox>
+                <TextBlock Name="CartX" Margin="10,10,10,10" TextAlignment="Center" FontSize="26.667" RelativePanel.AlignVerticalCenterWith="SetPoint" RelativePanel.RightOf="TurnIn">000</TextBlock>
+                <TextBlock Name="CartY" Margin="10,10,10,10" TextAlignment="Center" FontSize="26.667" RelativePanel.AlignVerticalCenterWith="SetPoint" RelativePanel.RightOf="CartX">000</TextBlock>
+                <TextBlock Name="CartZ" Margin="10,10,10,10" TextAlignment="Center" FontSize="26.667" RelativePanel.AlignVerticalCenterWith="SetPoint" RelativePanel.RightOf="CartY">000</TextBlock>
+                <TextBlock Margin="10,10,10,10" TextAlignment="Center" FontSize="26.667" RelativePanel.AlignHorizontalCenterWith="CartX">X</TextBlock>
+                <TextBlock Margin="10,10,10,10" TextAlignment="Center" FontSize="26.667" RelativePanel.AlignHorizontalCenterWith="CartY">Y</TextBlock>
+                <TextBlock Margin="10,10,10,10" TextAlignment="Center" FontSize="26.667" RelativePanel.AlignHorizontalCenterWith="CartZ">Z</TextBlock>
 
             </RelativePanel>
         </StackPanel>

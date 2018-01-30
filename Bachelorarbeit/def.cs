@@ -29,6 +29,11 @@ namespace Bachelorarbeit
         public const int CHECKTIME_GUI = 100;
         public const int ACTUALIZETIME_GUI = 200;
 
+        //Azure Cloud
+        public const string MY_RASPI = "fgr-rpi";
+        public const string connectionString = "HostName=BachelorTest.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=sT7wJiUIWn/b92Zs+at4cmtE0Bpt4fYiQE2a9S2UgpU=";
+        public const string iotHubUri = "BachelorTest.azure-devices.net";
+
         //Standerdhindernis
         public const int P1 = 0;
         public const int P2 = P_MAX;
