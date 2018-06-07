@@ -52,7 +52,7 @@ namespace Bachelorarbeit
         }
         public string printP()
         {
-            double value = ((p * def.P_FACT) / 10);
+            double value = 18.6 + ((p * def.P_FACT) / 10);
             string ret = String.Format("{0} / {1:0.00}cm",p, value);
             return ret;// "" + this.p + " / " + (this.p * P_FACT)/10;
         }
@@ -64,7 +64,7 @@ namespace Bachelorarbeit
         }
         public string printZ()
         {
-            double value = (z * def.Z_FACT) / 10;
+            double value = 17.2 - ((z * def.Z_FACT) / 10);
             string ret = String.Format("{0} / {1:00.00}cm", z, value);
             return ret;// "" + this.z + " / " + (this.z * Z_FACT)/10;
         }
